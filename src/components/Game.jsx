@@ -1,7 +1,29 @@
+import { Canvas } from "@react-three/fiber"
+import { Suspense, useRef } from "react"
+import Arena from "./Arena"
 
 const Game = () => {
+  const containerRef = useRef()
+
   return (
-    <div>Game</div>
+    <div
+      ref={containerRef}
+      className="w-full h-full"
+    >
+      <Canvas
+        camera={{
+          position: [0, 5, 5],
+          fov: 50,
+        }}
+        shadows
+      >
+        <Suspense>
+
+          <Arena />
+
+        </Suspense>
+      </Canvas>
+    </div>
   )
 }
 
