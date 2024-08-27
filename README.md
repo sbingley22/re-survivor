@@ -8,7 +8,6 @@ Survive a zombie and mutant infection.
 TODO:
 Create levels in blender, use nulls for items and characters
 Seperate glbs for each item
-Character y matches ground y
 
 
 To get Xbox Controller Working I had to change in package.json

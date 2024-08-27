@@ -16,6 +16,7 @@
     "react-dom": "^18.3.1",
     "react-gamepad": "SBRK/react-gamepad",
     "three": "^0.167.1",
+    "uuid": "^10.0.0",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
