@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber"
 import { Suspense, useRef } from "react"
 import Arena from "./Arena"
+import Hud from "../Hud"
 
 const Game = () => {
   const containerRef = useRef()
@@ -23,6 +24,9 @@ const Game = () => {
 
         </Suspense>
       </Canvas>
+
+      <Hud />
+
     </div>
   )
 }

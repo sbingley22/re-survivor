@@ -16,7 +16,7 @@ const Net = ({ id, pos, scale=1, nets, setNets }) => {
   useEffect(()=>{
     if (nodes["Net"]) {
       nodes["Net"].castShadow = true
-      nodes["Net"].material.color.set(0.02,0.04,0.01)
+      nodes["Net"].material.color.set(0.04,0.08,0.02)
     }
   }, [nodes])
 
@@ -26,7 +26,7 @@ const Net = ({ id, pos, scale=1, nets, setNets }) => {
     if (!group || !group.current) return
 
     const distance = group.current.position.distanceTo(player.current.position)
-    if (distance < scale) {
+    if (distance < scale[0]) {
       const item = inventory[inventorySlot]
       if (item.name === "net spray") {
         // Remove net and reduce item count

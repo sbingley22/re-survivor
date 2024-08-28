@@ -6,7 +6,7 @@ import { useSkinnedMeshClone } from "./SkinnedMeshClone"
 import { useAnimations } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 
-const CharModel = ({ anim, visibleNodes, transition }) => {
+const CharModel = ({ anim, visibleNodes, transition, speedMultiplier }) => {
   const { scene, nodes, animations } = useSkinnedMeshClone(glb)
   const { mixer, actions } = useAnimations(animations, scene)
   const lastAnim = useRef(anim.current)
@@ -107,7 +107,9 @@ const CharModel = ({ anim, visibleNodes, transition }) => {
 
     const fadeTime = 0.1
     actions[lastAnim.current].fadeOut(fadeTime)
-    actions[anim.current].reset().fadeIn(fadeTime).play()
+
+    const action = actions[anim.current].reset().fadeIn(fadeTime).play();
+    action.setEffectiveTimeScale(speedMultiplier.current);
 
     lastAnim.current = anim.current
   }
@@ -117,7 +119,6 @@ const CharModel = ({ anim, visibleNodes, transition }) => {
   useFrame((state, delta) => {
     updateAnimations()
   })
-
   
   return (
     <>

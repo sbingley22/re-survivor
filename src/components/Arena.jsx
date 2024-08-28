@@ -7,34 +7,48 @@ import { useGameStore } from "./useGameStore"
 import Player from "./characters/Player"
 import Jetski from "../items/Jetski"
 import Net from '../items/Net'
+import Item from '../items/Item'
+import Enemy from './characters/Enemy'
+import BloodManager from './BloodManager'
 
 const Arena = () => {
-  const { level, setGround } = useGameStore()
+  const { level, setGround, enemies, setEnemies, enemiesAdd, setEnemyGroup } = useGameStore()
   const { scene, nodes } = useGLTF(levels["test"].glb)
   const arenaRef = useRef()
+  const enemiesGroup = useRef()
   const [jetski, setJetski] = useState(null)
   const [nets, setNets] = useState([])
+  const [items, setItems] = useState([])  
+  const splatterFlag = useRef(null)
 
   // load level
   useEffect(()=>{
     console.log("level: ", nodes)
 
+    if (enemiesGroup.current) setEnemyGroup(enemiesGroup)
+    else console.log("Couldn't set enemy group!")
+
     if (nodes["ground"]) {
       setGround(nodes["ground"])
       nodes["ground"].receiveShadow = true
       if (nodes["ground"]?.material?.color) {
-        nodes["ground"].material.color.setScalar(0.1)
+        nodes["ground"].material.color.setScalar(0.2)
       }
     }
 
+    // Enemies
+    enemiesAdd(uuidv4(), "ZFemGen", [-7,0,-4])
+
+    // Jetski
     if (nodes["jetski"]) {
       setJetski({
         position: nodes["jetski"].position
       })
     }
 
+    // Nets
     if (nodes["nets"]) {
-      console.log(nodes["nets"])
+      // console.log(nodes["nets"])
       const temp = []
       nodes["nets"].children.forEach(net => {
         temp.push({
@@ -46,13 +60,39 @@ const Arena = () => {
       setNets(temp)
     }
 
-  }, [level, nodes, setGround])
+    // Add all items
+    const tempItems = []
+    if (nodes["medkits"]) {
+      nodes["medkits"].children.forEach(child => {
+        tempItems.push({
+          id: uuidv4(),
+          name: "HealthKit",
+          amount: 1,
+          position: [child.position.x, child.position.y, child.position.z],
+          scale: [child.scale.x, child.scale.y, child.scale.z],
+        })
+      })
+    }
+    if (nodes["netsprays"]) {
+      nodes["netsprays"].children.forEach(child => {
+        tempItems.push({
+          id: uuidv4(),
+          name: "Spray",
+          amount: 3,
+          position: [child.position.x, child.position.y, child.position.z],
+          scale: [child.scale.x, child.scale.y, child.scale.z],
+        })
+      })
+    }
+    setItems(tempItems)
+
+  }, [enemiesAdd, level, nodes, setEnemies, setEnemyGroup, setGround])
 
   return (
     <>
       <Environment
         preset="night"
-        environmentIntensity={3}
+        environmentIntensity={4}
         background={false}
         backgroundIntensity={1}
       />
@@ -72,6 +112,18 @@ const Arena = () => {
 
       <Player />
 
+      <group ref={enemiesGroup} >
+        {enemies.map(en => (
+          <Enemy 
+            key={en.id} 
+            id={en.id}
+            position={en.position}
+            type={en.type}
+            splatterFlag={splatterFlag}
+          />
+        ))}
+      </group>
+
       {jetski && <Jetski
         position={jetski.position}
       />}
@@ -86,6 +138,22 @@ const Arena = () => {
           setNets={setNets}
         />
       ))}
+
+      {items.map((item) => (
+        <Item
+          key={item.id}
+          id={item.id}
+          name={item.name}
+          amount={item.amount}
+          pos={item.position}
+          scale={item.scale}
+          items={items}
+          setItems={setItems}
+        />
+      ))}
+
+      <BloodManager splatterFlag={splatterFlag} />
+
     </>
   )
 }

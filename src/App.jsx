@@ -63,6 +63,8 @@ function App() {
         { name: "inventoryRight", keys: ["]", "2"] },
         { name: "inventoryUse", keys: ["p", "o", "P", "O", "q", "Q"] },
         { name: "shift", keys: ["Shift"] },
+        { name: "zoomIn", keys: ["="] },
+        { name: "zoomOut", keys: ["-"] },
         ]}
       >
         <Gamepad

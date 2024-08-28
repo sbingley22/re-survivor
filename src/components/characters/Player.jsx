@@ -1,17 +1,16 @@
 /* eslint-disable react/no-unknown-property */
-/* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react"
 import CharModel from './CharModel'
 import { useKeyboardControls } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { useGameStore } from "../useGameStore"
-import { cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec } from "../gameHelper"
+import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec, playAudio } from "../gameHelper"
 
 const vec3 = new THREE.Vector3()
 
 const Player = () => {
-  const { options, getGamepad, player, setPlayer, ground } = useGameStore()
+  const { options, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
   const anim = useRef("Idle")
@@ -19,18 +18,31 @@ const Player = () => {
   const [, getKeys] = useKeyboardControls()
   const { camera } = useThree()
 
-  // Alt Mode
+  const baseSpeed = 4.0
+  const speedMultiplier = useRef(1.0)
+  const inventoryHeld = useRef(false)
+  const inventoryUseHeld = useRef(false)
+  const targetedEnemy = useRef(null)
+  const aimTimer = useRef(0)
+  const camSettings = useRef({
+    x: 0,
+    y: 8,
+    z: 8,
+  })
+
+  // Character
   useEffect(()=>{
-    if (options.altCostume === 1) {
+    // console.log(options.character)
+    if (options.character === "jill jacketless") {
       setVisibleNodes(["Ana", "Pistol", "Shoes-HighTops", "Hair-Parted"])
     }
-    else if (options.altCostume === 2) {
+    else if (options.character === "jill jacketless alt") {
       setVisibleNodes(["AnaGen", "Pistol", "Shoes-HighTops", "Hair-Parted"])
     }
-    else if (options.altCostume === 3) {
+    else if (options.character === "goth") {
       setVisibleNodes(["SurvivorFGen", "Pistol", "Shoes-HighTops", "Hair-Parted", "Hair-TiedBack", "Hair-WavyPunk"])
     }
-    else if (options.altCostume === 4) {
+    else if (options.character === "survivor f") {
       setVisibleNodes(["SurvivorF", "Pistol", "Shoes-HighTops",  "Hair-WavyPunk", "GownTop"])
     }
     else {
@@ -45,7 +57,7 @@ const Player = () => {
     if (group.current.health <= 0) return
 
     // eslint-disable-next-line no-unused-vars
-    const { forward, backward, left, right, jump, interact, inventoryLeft, inventoryRight, inventoryUse, shift } = getKeys()
+    const { forward, backward, left, right, jump, interact, inventoryLeft, inventoryRight, inventoryUse, shift, zoomIn, zoomOut } = getKeys()
     const gamepad = getGamepad()
 
     // Check Flags
@@ -64,6 +76,87 @@ const Player = () => {
       group.current.groundFlag = null
     }
 
+    // Inventory
+    const updateInventory = () => {
+      if (inventoryLeft || inventoryRight || gamepad.inventoryLeft || gamepad.inventoryRight) {
+        if (inventoryHeld.current === false) {
+          let dir = 0
+          if (inventoryLeft || gamepad.inventoryLeft) dir = -1
+          if (inventoryRight || gamepad.inventoryRight) dir = 1
+
+          let tempSlot = inventorySlot + dir
+          if (tempSlot < 0) tempSlot = inventory.length-1
+          else if (tempSlot >= inventory.length) tempSlot = 0
+          setInventorySlot(tempSlot)
+        }
+        inventoryHeld.current = true
+      } else inventoryHeld.current = false
+
+      if ((inventoryUse || gamepad.inventoryUse) && !inventoryUseHeld.current) {
+        inventoryUseHeld.current = true
+        const item = inventory[inventorySlot]
+
+        if (item && item.name!=="") {
+          if (item.name === "stun grenade") {
+            if (enemyGroup.current) {
+              console.log(enemyGroup.current)
+              enemyGroup.current.children.forEach(child => {
+                child.actionFlag = "Stunned"
+              })
+            }
+            inventoryRemoveItem(inventorySlot, 1)
+            playAudio("./audio/gun-cocking.wav", 0.9)
+          }
+          else if (item.name === "health kit") {
+            group.current.health += 50
+            if (group.current.health > 100) group.current.health = 100
+            useGameStore.setState((state) => ({
+              hudInfo: {
+                ...state.hudInfo,
+                health: group.current.health,
+              }
+            }))
+            inventoryRemoveItem()
+          }
+        }
+      } else inventoryUseHeld.current = false
+    }
+    updateInventory()
+
+    const shoot = () => {
+      aimTimer.current += delta
+      if (isUnskippableAnimation(anim)) return
+
+      if (aimTimer.current < 0.75) {
+        // cooldown
+        anim.current = "Pistol Aim2"
+        return
+      }
+
+      // shoot at target
+      aimTimer.current = 0
+      anim.current = "Pistol Fire2"
+
+      if (targetedEnemy.current) {
+        let dmg = 20
+        if (inventory[inventorySlot].name === "power ammo") {
+          dmg *= 4
+          inventoryRemoveItem(inventorySlot, 1)
+          playAudio("./audio/pistol-gunshot.wav", 0.25)
+          anim.current = "Pistol Fire"
+        }
+        else {
+          playAudio("./audio/pistol-gunshot.wav", 0.14)
+        }
+
+        const enemy = enemyGroup.current.children.find(e => e.id === targetedEnemy.current)
+        enemy.dmgFlag = {
+          dmg: dmg,
+          position: group.current.position,
+          range: null,
+        }
+      }
+    }
     const movement = () => {
       if (!group.current) return
       transition.current = "Idle"
@@ -90,7 +183,7 @@ const Player = () => {
       if (Math.abs(gpmy) > moveDeadZone) dy = gpmy * -1
 
       // get move action
-      let speed = 4.0 * delta
+      let speed = baseSpeed * speedMultiplier.current * delta
       let moveAction = "Jogging"
       if (["Pistol Fire", "Pistol Fire2"].includes(anim.current)) moveAction = "Shooting"
       if (groundSurface==="net") moveAction = "WalkingWade"
@@ -120,9 +213,12 @@ const Player = () => {
       }
       else {
         // not moving
-        if (false) {
-          // enemies in range
+        const lockOn = enemyGroup ? lockOnEnemy(group.current.position, dx, dy, enemyGroup.current.children, targetedEnemy) : null
 
+        if (lockOn) {
+          // enemies in range
+          rotateToVec(group, lockOn.x, lockOn.y)
+          shoot()
         }
         else {
           if (!isUnskippableAnimation(anim)) {
@@ -137,8 +233,14 @@ const Player = () => {
     }
     movement()
 
-    cameraFollow(camera, group.current)
-
+    if (zoomIn) {
+      camSettings.current.y -= delta * 2
+      camSettings.current.z -= delta * 2
+    } else if (zoomOut) {
+      camSettings.current.y += delta * 2
+      camSettings.current.z += delta * 2
+    }
+    cameraFollow(camera, group.current, camSettings.current)
   })
 
   return (
@@ -150,6 +252,7 @@ const Player = () => {
         anim={anim}
         visibleNodes={visibleNodes}
         transition={transition} 
+        speedMultiplier={speedMultiplier}
       />
     </group>
   )
