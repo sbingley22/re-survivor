@@ -110,7 +110,9 @@ const Arena = () => {
         <primitive object={scene} />
       </group>
 
-      <Player />
+      <Player 
+        splatterFlag={splatterFlag}
+      />
 
       <group ref={enemiesGroup} >
         {enemies.map(en => (

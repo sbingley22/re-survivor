@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/no-unknown-property */
 import { useEffect, useRef, useState } from "react"
 import CharModel from './CharModel'
@@ -9,7 +10,7 @@ import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, ro
 
 const vec3 = new THREE.Vector3()
 
-const Player = () => {
+const Player = ({ splatterFlag }) => {
   const { options, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
@@ -41,6 +42,7 @@ const Player = () => {
     }
     else if (options.character === "goth") {
       setVisibleNodes(["SurvivorFGen", "Pistol", "Shoes-HighTops", "Hair-Parted", "Hair-TiedBack", "Hair-WavyPunk"])
+      speedMultiplier.current = 1.4
     }
     else if (options.character === "survivor f") {
       setVisibleNodes(["SurvivorF", "Pistol", "Shoes-HighTops",  "Hair-WavyPunk", "GownTop"])
@@ -50,6 +52,43 @@ const Player = () => {
     }
   }, [options])
   
+  const playerDead = () => {
+    console.log("DEAD")
+  }
+
+  // Take Damage
+  const takeDamage = (flag) => {
+    if (!group.current) return
+    if (flag.dmg === null) return
+
+    if (flag.pos) {
+      if (flag.range) {
+        const distance = group.current.position.distanceTo(flag.pos)
+        if (distance > flag.range) return
+      }
+    }
+    group.current.health -= flag.dmg
+
+    splatterFlag.current = {
+      pos: group.current.position,
+      color: 0x556611,
+    }
+
+    playAudio("./audio/f-hurt.ogg", 0.4)
+
+    const chance = Math.random()
+    if (chance > 0.8) anim.current = "Stunned"
+    else {
+      if (anim.current !== "Stunned") anim.current = "Take Damage"
+    }
+
+    if (group.current.health <= 0) {
+      // player dead 
+      anim.current = "Dying"
+      setTimeout(playerDead, 1000)
+    }
+  }
+
   // Game loop
   useFrame((state, delta) => {
     if (!group.current) return
@@ -66,7 +105,7 @@ const Player = () => {
       group.current.actionFlag = null
     }
     if (group.current.dmgFlag) {
-      // takeDamage(group.current.dmgFlag)
+      takeDamage(group.current.dmgFlag)
       group.current.dmgFlag = null
     }
     if (group.current.groundFlag) {
@@ -99,7 +138,6 @@ const Player = () => {
         if (item && item.name!=="") {
           if (item.name === "stun grenade") {
             if (enemyGroup.current) {
-              console.log(enemyGroup.current)
               enemyGroup.current.children.forEach(child => {
                 child.actionFlag = "Stunned"
               })
@@ -203,7 +241,7 @@ const Player = () => {
 
       if (dx || dy) {
         if (moveAction !== "Shooting") {
-          rotateToVec(group, dx, dy)
+          rotateToVec(group.current, dx, dy)
           transition.current = moveAction
 
           if (!isUnskippableAnimation(anim)) {
@@ -217,7 +255,7 @@ const Player = () => {
 
         if (lockOn) {
           // enemies in range
-          rotateToVec(group, lockOn.x, lockOn.y)
+          rotateToVec(group.current, lockOn.x, lockOn.y)
           shoot()
         }
         else {

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import CharModel from "./CharModel"
 import { useGameStore } from "../useGameStore"
-import { playAudio } from "../gameHelper"
+import { isUnskippableAnimation, moveToPlayer, playAudio } from "../gameHelper"
 import { useFrame } from "@react-three/fiber"
 
 const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
@@ -12,7 +12,9 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const anim = useRef("Idle")
   const transition = useRef("Idle")
   const [visibleNodes, setVisibleNodes] = useState([])
+  const baseSpeed = 2
   const speedMultiplier = useRef(1)
+  const attackRange = useRef(0.5)
 
   // Initialize
   useEffect(()=>{
@@ -43,7 +45,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
       color: 0x556611,
     }
 
-    playAudio("./audio/blood-splat.wav")
+    playAudio("./audio/blood-splat.wav", 0.5)
 
     const chance = Math.random()
     if (chance > 0.8) anim.current = "Stunned"
@@ -76,6 +78,22 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
       takeDamage(group.current.dmgFlag)
       group.current.dmgFlag = null
     }
+
+    // AI
+    const meleeAI = () => {
+      const speed = baseSpeed * speedMultiplier.current * delta
+      const moveResult = moveToPlayer(player.current, group.current, attackRange.current, speed)
+      if (moveResult === "in range") {
+        // console.log("in range")
+      }
+      else if (moveResult === "progress") {
+        if (!isUnskippableAnimation(anim)) {
+          anim.current = "WalkingStagger"
+        }
+      }
+    }
+    meleeAI()
+
   })
   
   return (

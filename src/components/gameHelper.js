@@ -103,23 +103,40 @@ export const lockOnEnemy = (position, dx, dy, enemies, targetedEnemy) => {
 }
 
 export const rotateToVec = (group, dx, dy, rotSpeed=0.1) => {
-  if (!group || !group.current) return
+  if (!group) return
 
   // Calculate target rotation
   const direction = vec3b.set(dx, 0, dy).normalize()
   const angle = Math.atan2(direction.x, direction.z)
 
   // Create quaternions for current and target rotations
-  const currentQuaternion = group.current.quaternion.clone()
+  const currentQuaternion = group.quaternion.clone()
   const targetQuaternion = quat.setFromAxisAngle(vec3c.set(0, 1, 0), angle)
 
   // Interpolate rotation using slerp
   currentQuaternion.slerp(targetQuaternion, rotSpeed)
-  group.current.quaternion.copy(currentQuaternion)
+  group.quaternion.copy(currentQuaternion)
 }
 
 export const playAudio = (src, volume=1) => {
   const audio = new Audio(src)
   audio.volume = volume
   audio.play()
+}
+
+export const moveToPlayer = (player, group, range, speed) => {
+  const distance = player.position.distanceTo(group.position)
+  if (distance < range) return "in range"
+
+  const vx =  player.position.x - group.position.x
+  const vz =  player.position.z - group.position.z
+  const ndx = vx / distance
+  const ndz = vz / distance
+
+  rotateToVec(group, ndx, ndz)
+  
+  group.position.x += ndx * speed
+  group.position.z += ndz * speed
+
+  return "progress"
 }
