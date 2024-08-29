@@ -1,19 +1,20 @@
-/* eslint-disable react/prop-types */
 import { useEffect } from "react"
 import { useGameStore } from "./components/useGameStore"
 
 const Hud = () => {
-  const { options, hudInfo, setHudInfo, inventory, inventorySlot } = useGameStore()
+  const { options, score, hudInfo, inventory, inventorySlot } = useGameStore()
   const getHudImg = () => {
     let hudImg = "./status/jillHealthy.png"
     let status = "Healthy"
     let char = "jill"
 
     if (hudInfo.health < 50) status = "Hurt"
+
+    if (hudInfo.status === "Shooting") status = "Shooting"
     
     const character = options.character
     if (character === "jill alt") char = "jillAlt"
-    if (character === "goth") char = "jillAlt"
+    if (character === "goth") char = "goth"
     if (character === "survivor f") char = "jillAlt"
 
     hudImg = `./status/${char}${status}.png`
@@ -47,11 +48,13 @@ const Hud = () => {
     <>
       <img 
         className="absolute bottom-0 right-0 border-black border-4"
-        style={{width: 160, height: 160, backgroundColor: bgCol}}
+        style={{width: 160, backgroundColor: bgCol, borderColor: bgCol}}
         src={hudImg} 
       />
 
       <p className="absolute bottom-0 left-0 m-2 text-green-500">{hudInfo.msg}</p>
+
+      <p className="absolute bottom-8 left-0 m-2 text-green-500">SCORE: {score}</p>
 
       <div className="absolute top-0 left-0 m-0 text-yellow-50 flex w-full box-border justify-center items-center text-center">
         {inventory.map((inv, index) => (

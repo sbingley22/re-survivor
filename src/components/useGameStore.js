@@ -23,6 +23,8 @@ export const useGameStore = create((set, get) => ({
   })),
   level: "test",
   setLevel: (level) => set({ level }),
+  score: 0,
+  setScore: (score) => set({ score }),
   getGamepad: () => gamepadState,
 
   player: null,
@@ -39,7 +41,19 @@ export const useGameStore = create((set, get) => ({
     enemies: state.enemies.filter(e => e.id !== id)
   }));
   },
-  enemiesAdd: (id, type, position) => {
+  enemiesAdd: (newEnemies) => {
+    const state = get()
+    const tempE = [...state.enemies]
+    newEnemies.forEach(e=>{
+      tempE.push({
+        id: e.id,
+        type: e.type,
+        position: e.position,
+      })
+    })
+    set({ enemies: tempE })
+  },
+  enemyAdd: (id, type, position) => {
     const state = get()
     const tempE = [...state.enemies]
     tempE.push({
@@ -93,7 +107,11 @@ export const useGameStore = create((set, get) => ({
   hudInfo: {
     health: 100,
     msg: "",
+    status: null,
   },
-  setHudInfo: (hudInfo) => set({ hudInfo })
+  setHudInfo: (hudInfo) => set({ hudInfo }),
+  setHudInfoParameter: (newParameter) => set((state) => ({
+    hudInfo: { ...state.hudInfo, ...newParameter },
+  })),
 
 }))

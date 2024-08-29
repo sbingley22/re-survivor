@@ -1,21 +1,21 @@
-/* eslint-disable react/prop-types */
 /* eslint-disable react/no-unknown-property */
+/* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react"
 import CharModel from './CharModel'
 import { useKeyboardControls } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { useGameStore } from "../useGameStore"
-import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec, playAudio } from "../gameHelper"
+import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec, playAudio, cameraControls } from "../gameHelper"
 
 const vec3 = new THREE.Vector3()
 
 const Player = ({ splatterFlag }) => {
-  const { options, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem } = useGameStore()
+  const { options, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
-  const anim = useRef("Idle")
-  const transition = useRef("Idle")
+  const anim = useRef("Pistol Ready")
+  const transition = useRef("Pistol Ready")
   const [, getKeys] = useKeyboardControls()
   const { camera } = useThree()
 
@@ -25,11 +25,6 @@ const Player = ({ splatterFlag }) => {
   const inventoryUseHeld = useRef(false)
   const targetedEnemy = useRef(null)
   const aimTimer = useRef(0)
-  const camSettings = useRef({
-    x: 0,
-    y: 8,
-    z: 8,
-  })
 
   // Character
   useEffect(()=>{
@@ -74,7 +69,7 @@ const Player = ({ splatterFlag }) => {
       color: 0x556611,
     }
 
-    playAudio("./audio/f-hurt.ogg", 0.4)
+    playAudio("./audio/f-hurt.ogg", 0.2)
 
     const chance = Math.random()
     if (chance > 0.8) anim.current = "Stunned"
@@ -87,6 +82,8 @@ const Player = ({ splatterFlag }) => {
       anim.current = "Dying"
       setTimeout(playerDead, 1000)
     }
+
+    setHudInfoParameter({health: group.current.health})
   }
 
   // Game loop
@@ -180,11 +177,11 @@ const Player = ({ splatterFlag }) => {
         if (inventory[inventorySlot].name === "power ammo") {
           dmg *= 4
           inventoryRemoveItem(inventorySlot, 1)
-          playAudio("./audio/pistol-gunshot.wav", 0.25)
+          playAudio("./audio/pistol-gunshot.wav", 0.2)
           anim.current = "Pistol Fire"
         }
         else {
-          playAudio("./audio/pistol-gunshot.wav", 0.14)
+          playAudio("./audio/pistol-gunshot.wav", 0.1)
         }
 
         const enemy = enemyGroup.current.children.find(e => e.id === targetedEnemy.current)
@@ -195,9 +192,10 @@ const Player = ({ splatterFlag }) => {
         }
       }
     }
+
     const movement = () => {
       if (!group.current) return
-      transition.current = "Idle"
+      transition.current = "Pistol Ready"
 
       let dx = 0
       let dy = 0
@@ -248,6 +246,7 @@ const Player = ({ splatterFlag }) => {
             anim.current = moveAction
           }
         }
+        setHudInfoParameter({status: "Pistol Ready"})
       }
       else {
         // not moving
@@ -257,10 +256,12 @@ const Player = ({ splatterFlag }) => {
           // enemies in range
           rotateToVec(group.current, lockOn.x, lockOn.y)
           shoot()
+          setHudInfoParameter({status: "Shooting"})
         }
         else {
           if (!isUnskippableAnimation(anim)) {
-            anim.current = "Idle"
+            anim.current = "Pistol Ready"
+            setHudInfoParameter({status: "Pistol Ready"})
           }
         }
       }
@@ -271,20 +272,15 @@ const Player = ({ splatterFlag }) => {
     }
     movement()
 
-    if (zoomIn) {
-      camSettings.current.y -= delta * 2
-      camSettings.current.z -= delta * 2
-    } else if (zoomOut) {
-      camSettings.current.y += delta * 2
-      camSettings.current.z += delta * 2
-    }
-    cameraFollow(camera, group.current, camSettings.current)
+    cameraControls(zoomIn, zoomOut, delta)
+    cameraFollow(camera, group.current)
   })
 
   return (
     <group
       ref={group}
       name='Player'
+      health={100}
     >
       <CharModel 
         anim={anim}

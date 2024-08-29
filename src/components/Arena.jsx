@@ -10,10 +10,11 @@ import Net from '../items/Net'
 import Item from '../items/Item'
 import Enemy from './characters/Enemy'
 import BloodManager from './BloodManager'
+import { useFrame } from '@react-three/fiber'
 
 const Arena = () => {
   const { level, setGround, enemies, setEnemies, enemiesAdd, setEnemyGroup } = useGameStore()
-  const { scene, nodes } = useGLTF(levels["test"].glb)
+  const { scene, nodes } = useGLTF(levels[level].glb)
   const arenaRef = useRef()
   const enemiesGroup = useRef()
   const [jetski, setJetski] = useState(null)
@@ -21,9 +22,22 @@ const Arena = () => {
   const [items, setItems] = useState([])  
   const splatterFlag = useRef(null)
 
+  const wave = useRef({
+    amount: null,
+    index: 0,
+    timer: 0
+  })
+
   // load level
   useEffect(()=>{
     console.log("level: ", nodes)
+
+    if (levels[level]?.waves) {
+      const waves = levels[level].waves[0]
+      wave.current.amount = waves.amount
+      wave.current.index = 0
+      wave.current.timer = 10
+    }
 
     if (enemiesGroup.current) setEnemyGroup(enemiesGroup)
     else console.log("Couldn't set enemy group!")
@@ -35,9 +49,6 @@ const Arena = () => {
         nodes["ground"].material.color.setScalar(0.2)
       }
     }
-
-    // Enemies
-    enemiesAdd(uuidv4(), "ZFemGen", [-7,0,-4])
 
     // Jetski
     if (nodes["jetski"]) {
@@ -87,6 +98,80 @@ const Arena = () => {
     setItems(tempItems)
 
   }, [enemiesAdd, level, nodes, setEnemies, setEnemyGroup, setGround])
+
+  const spawnEnemies = (waveData) => {
+    // debugger
+    const newEnemies = []
+    for (let index = 0; index < waveData.batch; index++) {
+      if (wave.current.amount < 1) {
+        enemiesAdd(newEnemies)
+        return false
+      }
+
+      // chose enemies to spawn
+      for (let y = 0; y < waveData.types.length; y++) {
+        const type = waveData.types[y]
+        const odds = waveData.odds[y]
+        const chance = Math.random()
+
+        if (chance < odds) {
+          // spawn enemy type
+          newEnemies.push(spawnEnemy(type))
+          wave.current.amount -= 1
+        }
+      }
+    }
+
+    enemiesAdd(newEnemies)
+  }
+
+  const spawnEnemy = (type) => {
+    let name = type
+    if (name === "Zombies") {
+      const chance = Math.random()
+      if (chance < 0.5) name = "ZFem"
+      else name = "ZMale"
+    }
+
+    // Random spawn location
+    const radius = 25
+    let rx = (Math.random() - 0.5) * radius
+    let rz = (Math.random() - 0.5) * radius
+
+    // Dont spawn too close to player
+    const space = 5
+    if (Math.abs(rx) < space) {
+      if (rx < 0) rx -= space
+      else rx += space
+    }
+    if (Math.abs(rz) < space) {
+      if (rz < 0) rz -= space
+      else rz += space
+    }
+
+    return {id: uuidv4(), type: name, position: [rx,0,rz]}
+  }
+
+  // Game Loop
+  useFrame((state,delta)=>{
+    const lvl = levels[level]
+    if (!lvl) return
+    if (wave.amount === null) return
+    const waveData = levels[level].waves[wave.current.index]
+    if (!waveData) return
+
+    wave.current.timer += delta
+    if (wave.current.timer > waveData.rate) {
+      wave.current.timer = 0
+      const result = spawnEnemies(waveData)
+
+      // check if all enemies are spawned
+      if (result === false) {
+        wave.current.index += 1
+      }
+    }
+
+  })
 
   return (
     <>

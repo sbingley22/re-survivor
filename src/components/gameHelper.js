@@ -8,7 +8,23 @@ const raycaster = new THREE.Raycaster()
 const direction = new THREE.Vector3(0, -1, 0)
 const origin = new THREE.Vector3(0, 10, 0)
 
-export const cameraFollow = (cam, player, camSettings=null) => {
+const camSettings = {
+  x: 0,
+  y: 8,
+  z: 8,
+}
+
+export const cameraControls = (zoomIn, zoomOut, delta=0.01) => {
+  if (zoomIn) {
+    camSettings.y -= delta * 2
+    camSettings.z -= delta * 2
+  } else if (zoomOut) {
+    camSettings.y += delta * 2
+    camSettings.z += delta * 2
+  }
+}
+
+export const cameraFollow = (cam, player) => {
   if (!cam || !player) return
   // console.log(cam)
   let x = 0
@@ -57,6 +73,7 @@ export const isUnskippableAnimation = (anim) => {
   if (a === "Pistol Fire") return true
   if (a === "Pistol Fire2") return true
   if (a === "Take Damage") return true
+  if (a === "Spawning") return true
   if (a === "Dying") return true
   if (a === "Stunned") return true
 

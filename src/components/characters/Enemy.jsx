@@ -3,18 +3,20 @@
 import { useEffect, useRef, useState } from "react"
 import CharModel from "./CharModel"
 import { useGameStore } from "../useGameStore"
-import { isUnskippableAnimation, moveToPlayer, playAudio } from "../gameHelper"
+import { getGroundYfromXZ, isUnskippableAnimation, moveToPlayer, playAudio } from "../gameHelper"
 import { useFrame } from "@react-three/fiber"
 
 const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const group = useRef()
-  const { player, enemiesRemove } = useGameStore()
-  const anim = useRef("Idle")
-  const transition = useRef("Idle")
+  const { ground, player, enemiesRemove } = useGameStore()
+  const anim = useRef("Spawning")
+  const transition = useRef("Spawning")
   const [visibleNodes, setVisibleNodes] = useState([])
   const baseSpeed = 2
-  const speedMultiplier = useRef(1)
-  const attackRange = useRef(0.5)
+  const speedMultiplier = useRef(1.0)
+  const attackRange = useRef(1.0)
+  const attackCooldown = useRef(0)
+  const weakness = useRef(2)
 
   // Initialize
   useEffect(()=>{
@@ -38,7 +40,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
         if (distance > flag.range) return
       }
     }
-    group.current.health -= flag.dmg
+    group.current.health -= flag.dmg * weakness.current
 
     splatterFlag.current = {
       pos: group.current.position,
@@ -61,10 +63,10 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   }
 
   // Game Loop
-  // eslint-disable-next-line no-unused-vars
   useFrame((state, delta) => {
     if (!group.current) return
     if (!player || !player.current) return
+    if (group.current.health <= 0) return
 
     // Flags    
     if (group.current.actionFlag) {
@@ -79,14 +81,50 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
       group.current.dmgFlag = null
     }
 
+    // No ai logic if spawning
+    if (anim.current === "Spawning") {
+      group.current.position.y = getGroundYfromXZ(ground, group.current.position.x, group.current.position.z)
+      return
+    }
+
     // AI
     const meleeAI = () => {
-      const speed = baseSpeed * speedMultiplier.current * delta
+      let speed = baseSpeed * speedMultiplier.current * delta
+      if (["Take Damage", "Stunned"].includes(anim.current)) speed *= 0.25
+
       const moveResult = moveToPlayer(player.current, group.current, attackRange.current, speed)
+      group.current.position.y = getGroundYfromXZ(ground, group.current.position.x, group.current.position.z)
+
       if (moveResult === "in range") {
-        // console.log("in range")
+        attackCooldown.current -= delta
+        if (attackCooldown.current <= 0) {
+          // Try to Attack
+          if (!isUnskippableAnimation(anim) || ["Take Damage"].includes(anim.current)) {
+            const chance = Math.random()
+            anim.current = "Fight Jab"
+            if (chance > 0.5) anim.current = "Fight Straight"
+
+            attackCooldown.current = 1
+            setTimeout(()=>{
+              player.current.dmgFlag = {
+                dmg: 20,
+                pos: group.current.position,
+                range: attackRange.current
+              }
+            }, 250)
+          }
+        }
+        else {
+          // Couldn't attack
+          if (!isUnskippableAnimation(anim)) {
+            anim.current = "Fight Stance"
+          }
+        }
       }
       else if (moveResult === "progress") {
+        // if attacking don't move forwards
+        if (["Fight Jab", "Fight Straight"].includes(anim.current)) return
+
         if (!isUnskippableAnimation(anim)) {
           anim.current = "WalkingStagger"
         }

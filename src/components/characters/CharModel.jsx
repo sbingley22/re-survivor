@@ -6,14 +6,14 @@ import { useSkinnedMeshClone } from "./SkinnedMeshClone"
 import { useAnimations } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 
-const CharModel = ({ anim, visibleNodes, transition, speedMultiplier }) => {
+const CharModel = ({ anim, visibleNodes, transition, speedMultiplier={current:1}, }) => {
   const { scene, nodes, animations } = useSkinnedMeshClone(glb)
   const { mixer, actions } = useAnimations(animations, scene)
   const lastAnim = useRef(anim.current)
 
   // Initial Setup
   useEffect(()=>{
-    console.log(nodes, actions)
+    // console.log(nodes, actions)
 
     Object.keys(nodes).forEach(nodeName => {
       const node = nodes[nodeName]
@@ -23,8 +23,8 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier }) => {
       }
     })
 
-    if (actions["Idle"]) {
-      actions["Idle"].play()
+    if (actions[anim.current]){
+      actions[anim.current].play()
     }
 
   },[nodes, actions])
@@ -55,7 +55,7 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier }) => {
   useEffect(()=>{
     if (!mixer) return
 
-    const oneShotAnims = ["Fight Jab", "Fight Roundhouse", "Fight Straight", "Jump", "Land", "Pistol Fire", "Pistol Fire2", "Take Damage", "Dying", "Stunned"]
+    const oneShotAnims = ["Fight Jab", "Fight Roundhouse", "Fight Straight", "Jump", "Land", "Pistol Fire", "Pistol Fire2", "Take Damage", "Dying", "Stunned", "Spawning"]
     oneShotAnims.forEach(osa => {
       actions[osa].clampWhenFinished = true
       actions[osa].repetitions = 1
@@ -108,7 +108,7 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier }) => {
     const fadeTime = 0.1
     actions[lastAnim.current].fadeOut(fadeTime)
 
-    const action = actions[anim.current].reset().fadeIn(fadeTime).play();
+    const action = actions[anim.current].reset().fadeIn(fadeTime).play()
     action.setEffectiveTimeScale(speedMultiplier.current);
 
     lastAnim.current = anim.current
