@@ -8,9 +8,9 @@ import { useFrame } from "@react-three/fiber"
 
 const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const group = useRef()
-  const { ground, player, enemiesRemove } = useGameStore()
+  const { addScore, getVolume, ground, player, enemiesRemove } = useGameStore()
   const anim = useRef("Spawning")
-  const transition = useRef("Spawning")
+  const transition = useRef("WalkingStagger")
   const [visibleNodes, setVisibleNodes] = useState([])
   const baseSpeed = 2
   const speedMultiplier = useRef(1.0)
@@ -27,6 +27,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   // Remove Enemy
   const enemyDead = () => {
     enemiesRemove(id)
+    addScore(10)
   }
 
   // Take Damage
@@ -47,7 +48,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
       color: 0x556611,
     }
 
-    playAudio("./audio/blood-splat.wav", 0.5)
+    playAudio("./audio/blood-splat.wav", 0.5 * getVolume())
 
     const chance = Math.random()
     if (chance > 0.8) anim.current = "Stunned"
@@ -58,6 +59,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
     if (group.current.health <= 0) {
       // zombie dead 
       anim.current = "Dying"
+      transition.current = "Dying"
       setTimeout(enemyDead, 1000)
     }
   }
@@ -83,7 +85,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
 
     // No ai logic if spawning
     if (anim.current === "Spawning") {
-      group.current.position.y = getGroundYfromXZ(ground, group.current.position.x, group.current.position.z)
+      group.current.position.y = getGroundYfromXZ(ground, group.current.position.x, group.current.position.z) ?? 0
       return
     }
 
@@ -93,7 +95,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
       if (["Take Damage", "Stunned"].includes(anim.current)) speed *= 0.25
 
       const moveResult = moveToPlayer(player.current, group.current, attackRange.current, speed)
-      group.current.position.y = getGroundYfromXZ(ground, group.current.position.x, group.current.position.z)
+      group.current.position.y = getGroundYfromXZ(ground, group.current.position.x, group.current.position.z) ?? 0
 
       if (moveResult === "in range") {
         attackCooldown.current -= delta
@@ -116,6 +118,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
         }
         else {
           // Couldn't attack
+          transition.current = "Fight Stance"
           if (!isUnskippableAnimation(anim)) {
             anim.current = "Fight Stance"
           }
@@ -125,6 +128,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
         // if attacking don't move forwards
         if (["Fight Jab", "Fight Straight"].includes(anim.current)) return
 
+        transition.current = "WalkingStagger"
         if (!isUnskippableAnimation(anim)) {
           anim.current = "WalkingStagger"
         }

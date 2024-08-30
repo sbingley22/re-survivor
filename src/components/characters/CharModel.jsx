@@ -64,6 +64,7 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier={current:1}
     mixer.addEventListener("finished", (e) => {
       const action = e.action.getClip().name
       // console.log(action)
+      if (anim.current === "Dying") return
 
       if (action === "Pistol Fire") {
         if (anim.current === "Fight Roundhouse") return
@@ -89,6 +90,7 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier={current:1}
       }
       if (action === "Take Damage") {
         if (transition.current) anim.current = transition.current
+        return
       }
       if (action === "Dying") {
         return
@@ -100,6 +102,16 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier={current:1}
     return mixer.removeEventListener("finished")
   }, [mixer, actions, anim, transition])
 
+  // Animation Speed
+  const getTimeScale = () => {
+    let timescale = 1
+
+    if (["Walking", "Jogging", "WalkingHurt", "WalkingStagger"].includes(anim.current)) timescale *= speedMultiplier.current
+
+    if (anim.current === "Pistol Fire2") timescale *= 2
+
+    return timescale
+  }
 
   // Update Animations
   const updateAnimations = () => {
@@ -109,7 +121,9 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier={current:1}
     actions[lastAnim.current].fadeOut(fadeTime)
 
     const action = actions[anim.current].reset().fadeIn(fadeTime).play()
-    action.setEffectiveTimeScale(speedMultiplier.current);
+
+    const timescale = getTimeScale()
+    action.setEffectiveTimeScale(timescale)
 
     lastAnim.current = anim.current
   }

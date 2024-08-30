@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/no-unknown-property */
 import { useGLTF } from "@react-three/drei"
-import glb from "../assets/items/reProps.glb?url"
+import glb from "../assets/items/reItems.glb?url"
 import { useEffect, useState } from "react"
 
 const ItemModels = ({ node }) => {

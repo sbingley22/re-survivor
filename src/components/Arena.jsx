@@ -11,14 +11,16 @@ import Item from '../items/Item'
 import Enemy from './characters/Enemy'
 import BloodManager from './BloodManager'
 import { useFrame } from '@react-three/fiber'
+import Bush from '../items/Bush'
 
 const Arena = () => {
-  const { level, setGround, enemies, setEnemies, enemiesAdd, setEnemyGroup } = useGameStore()
+  const { addScore, player, level, setGround, enemies, setEnemies, enemiesAdd, setEnemyGroup } = useGameStore()
   const { scene, nodes } = useGLTF(levels[level].glb)
   const arenaRef = useRef()
   const enemiesGroup = useRef()
   const [jetski, setJetski] = useState(null)
   const [nets, setNets] = useState([])
+  const [bushes, setBushes] = useState([])
   const [items, setItems] = useState([])  
   const splatterFlag = useRef(null)
 
@@ -46,7 +48,7 @@ const Arena = () => {
       setGround(nodes["ground"])
       nodes["ground"].receiveShadow = true
       if (nodes["ground"]?.material?.color) {
-        nodes["ground"].material.color.setScalar(0.2)
+        nodes["ground"].material.color.setScalar(0.3)
       }
     }
 
@@ -71,13 +73,27 @@ const Arena = () => {
       setNets(temp)
     }
 
+    // Bushes
+    if (nodes["bushes"]) {
+      const temp = []
+      nodes["bushes"].children.forEach(child => {
+        temp.push({
+          id: uuidv4(),
+          position: [child.position.x, child.position.y, child.position.z],
+          scale: [child.scale.x, child.scale.y, child.scale.z],
+        })
+      })
+      setBushes(temp)
+    }
+
     // Add all items
     const tempItems = []
     if (nodes["medkits"]) {
       nodes["medkits"].children.forEach(child => {
         tempItems.push({
           id: uuidv4(),
-          name: "HealthKit",
+          name: "Medkit",
+          node: "HealthKit",
           amount: 1,
           position: [child.position.x, child.position.y, child.position.z],
           scale: [child.scale.x, child.scale.y, child.scale.z],
@@ -88,7 +104,8 @@ const Arena = () => {
       nodes["netsprays"].children.forEach(child => {
         tempItems.push({
           id: uuidv4(),
-          name: "Spray",
+          name: "Net Spray",
+          node: "Spray",
           amount: 3,
           position: [child.position.x, child.position.y, child.position.z],
           scale: [child.scale.x, child.scale.y, child.scale.z],
@@ -134,7 +151,7 @@ const Arena = () => {
     }
 
     // Random spawn location
-    const radius = 25
+    const radius = 50
     let rx = (Math.random() - 0.5) * radius
     let rz = (Math.random() - 0.5) * radius
 
@@ -147,6 +164,11 @@ const Arena = () => {
     if (Math.abs(rz) < space) {
       if (rz < 0) rz -= space
       else rz += space
+    }
+
+    if (player && player.current) {
+      rx += player.current.position.x
+      rz += player.current.position.z
     }
 
     return {id: uuidv4(), type: name, position: [rx,0,rz]}
@@ -168,6 +190,7 @@ const Arena = () => {
       // check if all enemies are spawned
       if (result === false) {
         wave.current.index += 1
+        addScore(100)
       }
     }
 
@@ -177,14 +200,14 @@ const Arena = () => {
     <>
       <Environment
         preset="night"
-        environmentIntensity={4}
+        environmentIntensity={6}
         background={false}
         backgroundIntensity={1}
       />
       <directionalLight
         castShadow
         position={[0,10,0]}
-        intensity={.5}
+        intensity={1.0}
         shadow-camera-left={-40}
         shadow-camera-right={40}
         shadow-camera-top={40}
@@ -226,11 +249,23 @@ const Arena = () => {
         />
       ))}
 
+      {bushes.map((child) => (
+        <Bush
+          key={child.id}
+          id={child.id}
+          pos={child.position}
+          scale={child.scale}
+          bushes={bushes}
+          setBushes={setBushes}
+        />
+      ))}
+
       {items.map((item) => (
         <Item
           key={item.id}
           id={item.id}
           name={item.name}
+          node={item.node}
           amount={item.amount}
           pos={item.position}
           scale={item.scale}

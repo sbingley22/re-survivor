@@ -30,10 +30,10 @@ const Hud = () => {
     if (item.name === "") return
 
     let msg = "Q/O "
-    if (item.name === "stun grenade") msg += "to use stun grenade"
-    else if (item.name === "health kit") msg += "to use health kit"
-    else if (item.name === "net spray") msg = "use net spray by walking on slime and recieve no damage"
-    else if (item.name === "power ammo") msg = "shoot with power ammo to deal high dmg"
+    if (item.name === "Stun Grenade") msg += "to use stun grenade"
+    else if (item.name === "Medkit") msg += "to use health kit"
+    else if (item.name === "Net Spray") msg = "use net spray by walking on slime and recieve no damage"
+    else if (item.name === "Power Ammo") msg = "shoot with power ammo to deal high dmg"
 
     useGameStore.setState((state) => ({
       hudInfo: {
@@ -60,7 +60,7 @@ const Hud = () => {
         {inventory.map((inv, index) => (
           <p
             key={"inventory"+index}
-            className={`${index===inventorySlot? "border-slate-500" : "border-slate-800"} p-1 m-1 bg-slate-950 border-2 inline-block flex-grow`}
+            className={`${index===inventorySlot? "border-slate-200" : "border-slate-800"} p-1 m-1 bg-slate-950 border-2 inline-block flex-grow`}
           >{`${inv.name !== "" ? inv.name + " x" + inv.amount : ""}`}</p>
         ))}
       </div>

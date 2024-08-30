@@ -11,7 +11,7 @@ import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, ro
 const vec3 = new THREE.Vector3()
 
 const Player = ({ splatterFlag }) => {
-  const { options, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
+  const { options, getVolume, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
   const anim = useRef("Pistol Ready")
@@ -69,7 +69,7 @@ const Player = ({ splatterFlag }) => {
       color: 0x556611,
     }
 
-    playAudio("./audio/f-hurt.ogg", 0.2)
+    playAudio("./audio/f-hurt.ogg", 0.2 * getVolume())
 
     const chance = Math.random()
     if (chance > 0.8) anim.current = "Stunned"
@@ -133,25 +133,20 @@ const Player = ({ splatterFlag }) => {
         const item = inventory[inventorySlot]
 
         if (item && item.name!=="") {
-          if (item.name === "stun grenade") {
+          if (item.name === "Stun Grenade") {
             if (enemyGroup.current) {
               enemyGroup.current.children.forEach(child => {
                 child.actionFlag = "Stunned"
               })
             }
             inventoryRemoveItem(inventorySlot, 1)
-            playAudio("./audio/gun-cocking.wav", 0.9)
+            playAudio("./audio/gun-cocking.wav", 0.9 * getVolume())
           }
-          else if (item.name === "health kit") {
+          else if (item.name === "Medkit") {
             group.current.health += 50
             if (group.current.health > 100) group.current.health = 100
-            useGameStore.setState((state) => ({
-              hudInfo: {
-                ...state.hudInfo,
-                health: group.current.health,
-              }
-            }))
-            inventoryRemoveItem()
+            setHudInfoParameter({health: group.current.health})
+            inventoryRemoveItem(inventorySlot, 1)
           }
         }
       } else inventoryUseHeld.current = false
@@ -162,7 +157,7 @@ const Player = ({ splatterFlag }) => {
       aimTimer.current += delta
       if (isUnskippableAnimation(anim)) return
 
-      if (aimTimer.current < 0.75) {
+      if (aimTimer.current < 0.5) {
         // cooldown
         anim.current = "Pistol Aim2"
         return
@@ -177,11 +172,11 @@ const Player = ({ splatterFlag }) => {
         if (inventory[inventorySlot].name === "power ammo") {
           dmg *= 4
           inventoryRemoveItem(inventorySlot, 1)
-          playAudio("./audio/pistol-gunshot.wav", 0.2)
+          playAudio("./audio/pistol-gunshot.wav", 0.2 * getVolume())
           anim.current = "Pistol Fire"
         }
         else {
-          playAudio("./audio/pistol-gunshot.wav", 0.1)
+          playAudio("./audio/pistol-gunshot.wav", 0.1 * getVolume())
         }
 
         const enemy = enemyGroup.current.children.find(e => e.id === targetedEnemy.current)

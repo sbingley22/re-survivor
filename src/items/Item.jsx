@@ -5,7 +5,7 @@ import ItemModels from "./ItemModels"
 import { useGameStore } from "../components/useGameStore"
 import { useFrame } from "@react-three/fiber"
 
-const Item = ({ id, name, amount, pos, scale=1, items, setItems }) => {
+const Item = ({ id, name, node, amount, pos, scale=1, items, setItems }) => {
   const group = useRef()
   const { player, inventoryAddItem } = useGameStore()
 
@@ -30,7 +30,7 @@ const Item = ({ id, name, amount, pos, scale=1, items, setItems }) => {
       position={pos}
       scale={scale}
     >
-      <ItemModels node={name} />
+      <ItemModels node={node} />
     </group>
   )
 }

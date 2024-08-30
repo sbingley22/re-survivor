@@ -6,11 +6,18 @@ const levels = {
     waves: [
       {
         amount: 20,
-        rate: 15,
+        rate: 5,
         batch: 4,
         types: ["Zombies",],
         odds: [1,],
-      }
+      },
+      {
+        amount: 20,
+        rate: 5,
+        batch: 6,
+        types: ["Zombies",],
+        odds: [1,],
+      },
     ]
   }
 
