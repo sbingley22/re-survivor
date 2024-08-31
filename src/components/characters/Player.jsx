@@ -14,6 +14,7 @@ const Player = ({ splatterFlag }) => {
   const { options, getVolume, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
+  const [skin, setSkin] = useState(null)
   const anim = useRef("Pistol Ready")
   const transition = useRef("Pistol Ready")
   const [, getKeys] = useKeyboardControls()
@@ -34,6 +35,14 @@ const Player = ({ splatterFlag }) => {
     }
     else if (options.character === "jill jacketless alt") {
       setVisibleNodes(["AnaGen", "Pistol", "Shoes-HighTops", "Hair-Parted"])
+    }
+    else if (options.character === "leon") {
+      setVisibleNodes(["Leon", "Pistol"])
+      setSkin({node: "Leon", index: 0})
+    }
+    else if (options.character === "leon shirtless") {
+      setVisibleNodes(["Leon", "Pistol"])
+      setSkin({node: "Leon", index: 1})
     }
     else if (options.character === "goth") {
       setVisibleNodes(["SurvivorFGen", "Pistol", "Shoes-HighTops", "Hair-Parted", "Hair-TiedBack", "Hair-WavyPunk"])
@@ -280,6 +289,7 @@ const Player = ({ splatterFlag }) => {
       <CharModel 
         anim={anim}
         visibleNodes={visibleNodes}
+        skin={skin}
         transition={transition} 
         speedMultiplier={speedMultiplier}
       />

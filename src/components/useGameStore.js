@@ -18,7 +18,8 @@ export const useGameStore = create((set, get) => ({
   options:{
     volume: 0.5,
     // character: "jill",
-    character: "goth",
+    character: "leon",
+    // character: "goth",
   },
   setOptions: (newOptions) => set((state) => ({
     options: { ...state.options, ...newOptions},

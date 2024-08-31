@@ -4,11 +4,13 @@ import { useGameStore } from "./components/useGameStore"
 import Gamepad from "react-gamepad"
 
 function App() {
-  const { mode, gamepad } = useGameStore()
+  const { mode, getGamepad } = useGameStore()
 
   // Gamepad setup
   const handleGamepadButtonDown = (buttonName) => {
     if (!buttonName) return
+    const gamepad = getGamepad()
+    if (!gamepad) return
     // console.log(`Button ${buttonName} pressed`)
     // Handle button press
     if (buttonName === "A") gamepad.jump = true
@@ -19,6 +21,8 @@ function App() {
   }
   const handleGamepadButtonUp = (buttonName) => {
     if (!buttonName) return
+    const gamepad = getGamepad()
+    if (!gamepad) return
     // console.log(`Button ${buttonName} released`)
     // Handle button release
     if (buttonName === "A") gamepad.jump = false
@@ -28,6 +32,8 @@ function App() {
     else if (buttonName === "DPadUp") gamepad.inventoryUse = false
   }
   const handleGamepadAxisChange = (axisName, value) => {
+    const gamepad = getGamepad()
+    if (!gamepad) return
     // console.log(`${axisName} : ${value}`)
     // Handle axis movement
     if (axisName === "LeftStickX") gamepad.moveX = value

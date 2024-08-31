@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 *.local
 src/assets/dev
+public/status/dev
+public/stills/dev
 
 
 # Editor directories and files

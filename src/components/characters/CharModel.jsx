@@ -6,7 +6,7 @@ import { useSkinnedMeshClone } from "./SkinnedMeshClone"
 import { useAnimations } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 
-const CharModel = ({ anim, visibleNodes, transition, speedMultiplier={current:1}, }) => {
+const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier={current:1}, }) => {
   const { scene, nodes, animations } = useSkinnedMeshClone(glb)
   const { mixer, actions } = useAnimations(animations, scene)
   const lastAnim = useRef(anim.current)
@@ -51,6 +51,21 @@ const CharModel = ({ anim, visibleNodes, transition, speedMultiplier={current:1}
     })
   }, [visibleNodes, nodes])
 
+  // Skin change
+  useEffect(()=>{
+    if (skin === null) return
+
+    const charNode = skin.node
+    if (!charNode) return
+    const node = nodes[charNode]
+    if (!node || node.type !== "Group") return
+
+    if (node.children.length <= skin.index) return
+    node.children.forEach(child=>{
+      child.material = node.children[skin.index].material
+    })
+  }, [skin, nodes])
+  
   // Mixer Settings
   useEffect(()=>{
     if (!mixer) return

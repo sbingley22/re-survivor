@@ -15,6 +15,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const baseSpeed = 2
   const speedMultiplier = useRef(1.0)
   const attackRange = useRef(1.0)
+  const attackPower = useRef(1.0)
   const attackCooldown = useRef(0)
   const weakness = useRef(2)
 
@@ -22,7 +23,21 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   useEffect(()=>{
     // console.log("Enemy: ", type)
     setVisibleNodes(["ZFemGen"])
-  }, [])
+
+    if (type === "ZFem") {
+      setVisibleNodes(["ZFem"])
+      speedMultiplier.current = 1.1
+      attackPower.current = 0.8
+      weakness.current = 0.8
+    }
+    else if (type === "ZMale") {
+      setVisibleNodes(["ZMale"])
+      speedMultiplier.current = 0.9
+      attackPower.current = 1.1
+      weakness.current = 1.1
+    }
+
+  }, [type])
 
   // Remove Enemy
   const enemyDead = () => {
@@ -109,7 +124,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
             attackCooldown.current = 1
             setTimeout(()=>{
               player.current.dmgFlag = {
-                dmg: 20,
+                dmg: 20 * attackPower.current,
                 pos: group.current.position,
                 range: attackRange.current
               }

@@ -14,8 +14,10 @@ const Hud = () => {
     
     const character = options.character
     if (character === "jill alt") char = "jillAlt"
-    if (character === "goth") char = "goth"
-    if (character === "survivor f") char = "jillAlt"
+    else if (character === "leon") char = "leon"
+    else if (character === "leonAlt") char = "leonAlt"
+    else if (character === "goth") char = "goth"
+    else if (character === "survivor f") char = "jillAlt"
 
     hudImg = `./status/${char}${status}.png`
     return hudImg
