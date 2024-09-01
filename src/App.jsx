@@ -2,6 +2,7 @@ import { KeyboardControls } from "@react-three/drei"
 import Game from "./components/Game"
 import { useGameStore } from "./components/useGameStore"
 import Gamepad from "react-gamepad"
+import MainMenu from "./menus/MainMenu"
 
 function App() {
   const { mode, getGamepad } = useGameStore()
@@ -80,10 +81,13 @@ function App() {
           onButtonUp={handleGamepadButtonUp}
           onAxisChange={handleGamepadAxisChange}
         >
+          <>
+            {mode===0 && <Game
+            />}
 
-          {mode===0 && <Game
-          />}
-
+            {mode===5 && <MainMenu
+            />}
+          </>
         </Gamepad>
       </KeyboardControls>
     </div>

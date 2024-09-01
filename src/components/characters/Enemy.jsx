@@ -12,7 +12,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const anim = useRef("Spawning")
   const transition = useRef("WalkingStagger")
   const [visibleNodes, setVisibleNodes] = useState([])
-  const baseSpeed = 2
+  const baseSpeed = 2.2
   const speedMultiplier = useRef(1.0)
   const attackRange = useRef(1.0)
   const attackPower = useRef(1.0)
@@ -26,15 +26,15 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
 
     if (type === "ZFem") {
       setVisibleNodes(["ZFem"])
-      speedMultiplier.current = 1.1
+      speedMultiplier.current = 1.2
       attackPower.current = 0.8
-      weakness.current = 0.8
+      weakness.current = 3.0
     }
     else if (type === "ZMale") {
       setVisibleNodes(["ZMale"])
       speedMultiplier.current = 0.9
       attackPower.current = 1.1
-      weakness.current = 1.1
+      weakness.current = 2.5
     }
 
   }, [type])
@@ -146,6 +146,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
         transition.current = "WalkingStagger"
         if (!isUnskippableAnimation(anim)) {
           anim.current = "WalkingStagger"
+          if (Math.random() < 0.003) anim.current = "Stunned"
         }
       }
     }

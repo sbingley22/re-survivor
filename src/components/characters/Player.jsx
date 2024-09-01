@@ -6,12 +6,12 @@ import { useKeyboardControls } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { useGameStore } from "../useGameStore"
-import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec, playAudio, cameraControls } from "../gameHelper"
+import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec, playAudio, cameraControls, isFemale } from "../gameHelper"
 
 const vec3 = new THREE.Vector3()
 
 const Player = ({ splatterFlag }) => {
-  const { options, getVolume, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
+  const { setMode, options, getVolume, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
   const [skin, setSkin] = useState(null)
@@ -21,7 +21,7 @@ const Player = ({ splatterFlag }) => {
   const { camera } = useThree()
 
   const baseSpeed = 4.0
-  const speedMultiplier = useRef(1.0)
+  const speedMultiplier = useRef(0.8)
   const inventoryHeld = useRef(false)
   const inventoryUseHeld = useRef(false)
   const targetedEnemy = useRef(null)
@@ -57,7 +57,8 @@ const Player = ({ splatterFlag }) => {
   }, [options])
   
   const playerDead = () => {
-    console.log("DEAD")
+    // console.log("DEAD")
+    setMode(5)
   }
 
   // Take Damage
@@ -78,7 +79,8 @@ const Player = ({ splatterFlag }) => {
       color: 0x556611,
     }
 
-    playAudio("./audio/f-hurt.ogg", 0.2 * getVolume())
+    if (isFemale(options.character)) playAudio("./audio/f-hurt.ogg", 0.2 * getVolume())
+    else playAudio("./audio/male-grunt-uh.mp3", 0.2 * getVolume())
 
     const chance = Math.random()
     if (chance > 0.8) anim.current = "Stunned"
@@ -168,13 +170,15 @@ const Player = ({ splatterFlag }) => {
 
       if (aimTimer.current < 0.5) {
         // cooldown
-        anim.current = "Pistol Aim2"
+        if (isFemale(options.character)) anim.current = "Pistol Aim2"
+        else anim.current = "Pistol Aim"
         return
       }
 
       // shoot at target
       aimTimer.current = 0
-      anim.current = "Pistol Fire2"
+      if (isFemale(options.character)) anim.current = "Pistol Fire2"
+      else anim.current = "Pistol Fire"
 
       if (targetedEnemy.current) {
         let dmg = 20

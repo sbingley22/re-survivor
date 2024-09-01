@@ -157,3 +157,12 @@ export const moveToPlayer = (player, group, range, speed) => {
 
   return "progress"
 }
+
+export const isFemale = (char) => {
+  let female = true
+
+  if (char === "leon") female = false
+  else if (char === "leon shirtless") female = false
+
+  return female
+}
