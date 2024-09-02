@@ -11,7 +11,7 @@ import { lockOnEnemy, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, ro
 const vec3 = new THREE.Vector3()
 
 const Player = ({ splatterFlag }) => {
-  const { setMode, options, getVolume, getGamepad, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
+  const { setMode, options, getVolume, getMute, getGamepad, level, setScore, getScore, player, setPlayer, ground, enemyGroup, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
   const [skin, setSkin] = useState(null)
@@ -56,8 +56,38 @@ const Player = ({ splatterFlag }) => {
     }
   }, [options])
   
+  const updateScores = () => {
+    // Retrieve existing scores from localStorage
+    const scoresData = JSON.parse(localStorage.getItem("scores")) || {};
+    
+    // If the level doesn't exist, initialize it as an empty object
+    if (!scoresData[level]) {
+        scoresData[level] = {};
+    }
+    
+    // If the character doesn't exist under this level, initialize the score
+    if (!scoresData[level][options.character]) {
+        scoresData[level][options.character] = getScore();
+    } else {
+        // Compare the current score with the last saved score
+        const lastScore = scoresData[level][options.character];
+        const currentScore = getScore();
+        if (lastScore < currentScore) {
+            scoresData[level][options.character] = currentScore;
+        }
+    }
+    
+    // Save updated scores back to localStorage
+    localStorage.setItem('scores', JSON.stringify(scoresData));
+    
+    // Reset the score
+    setScore(0);
+}
+
+
   const playerDead = () => {
     // console.log("DEAD")
+    updateScores()
     setMode(5)
   }
 
@@ -79,8 +109,8 @@ const Player = ({ splatterFlag }) => {
       color: 0x556611,
     }
 
-    if (isFemale(options.character)) playAudio("./audio/f-hurt.ogg", 0.2 * getVolume())
-    else playAudio("./audio/male-grunt-uh.mp3", 0.2 * getVolume())
+    if (isFemale(options.character)) playAudio("./audio/f-hurt.ogg", 0.2 * getVolume(), getMute())
+    else playAudio("./audio/male-grunt-uh.mp3", 0.2 * getVolume(), getMute())
 
     const chance = Math.random()
     if (chance > 0.8) anim.current = "Stunned"
@@ -151,7 +181,7 @@ const Player = ({ splatterFlag }) => {
               })
             }
             inventoryRemoveItem(inventorySlot, 1)
-            playAudio("./audio/gun-cocking.wav", 0.9 * getVolume())
+            playAudio("./audio/gun-cocking.wav", 0.9 * getVolume(), getMute())
           }
           else if (item.name === "Medkit") {
             group.current.health += 50
@@ -185,11 +215,11 @@ const Player = ({ splatterFlag }) => {
         if (inventory[inventorySlot].name === "power ammo") {
           dmg *= 4
           inventoryRemoveItem(inventorySlot, 1)
-          playAudio("./audio/pistol-gunshot.wav", 0.2 * getVolume())
+          playAudio("./audio/pistol-gunshot.wav", 0.2 * getVolume(), getMute())
           anim.current = "Pistol Fire"
         }
         else {
-          playAudio("./audio/pistol-gunshot.wav", 0.1 * getVolume())
+          playAudio("./audio/pistol-gunshot.wav", 0.1 * getVolume(), getMute())
         }
 
         const enemy = enemyGroup.current.children.find(e => e.id === targetedEnemy.current)

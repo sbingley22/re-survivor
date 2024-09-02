@@ -135,7 +135,8 @@ export const rotateToVec = (group, dx, dy, rotSpeed=0.1) => {
   group.quaternion.copy(currentQuaternion)
 }
 
-export const playAudio = (src, volume=1) => {
+export const playAudio = (src, volume=1, mute=false) => {
+  if (mute) return
   const audio = new Audio(src)
   audio.volume = volume
   audio.play()

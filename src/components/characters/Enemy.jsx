@@ -8,7 +8,7 @@ import { useFrame } from "@react-three/fiber"
 
 const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const group = useRef()
-  const { addScore, getVolume, ground, player, enemiesRemove } = useGameStore()
+  const { addScore, getVolume, getMute, ground, player, enemiesRemove } = useGameStore()
   const anim = useRef("Spawning")
   const transition = useRef("WalkingStagger")
   const [visibleNodes, setVisibleNodes] = useState([])
@@ -63,7 +63,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
       color: 0x556611,
     }
 
-    playAudio("./audio/blood-splat.wav", 0.5 * getVolume())
+    playAudio("./audio/blood-splat.wav", 0.5 * getVolume(), getMute())
 
     const chance = Math.random()
     if (chance > 0.8) anim.current = "Stunned"

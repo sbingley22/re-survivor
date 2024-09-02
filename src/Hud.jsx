@@ -13,9 +13,9 @@ const Hud = () => {
     if (hudInfo.status === "Shooting") status = "Shooting"
     
     const character = options.character
-    if (character === "jill alt") char = "jillAlt"
+    if (character.includes("jill jacketless")) char = "jillAlt"
     else if (character === "leon") char = "leon"
-    else if (character === "leonAlt") char = "leonAlt"
+    else if (character === "leon shirtless") char = "leonAlt"
     else if (character === "goth") char = "goth"
     else if (character === "survivor f") char = "jillAlt"
 

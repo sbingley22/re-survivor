@@ -13,18 +13,20 @@ const gamepadState = {
 export const useGameStore = create((set, get) => ({
   getGamepad: () => gamepadState,
 
-  mode: 0,
+  mode: 5,
   setMode: (mode) => set({ mode}),
   options:{
-    volume: 0.5,
     // character: "jill",
     character: "leon",
     // character: "goth",
+    volume: 0.5,
+    mute: false,
   },
   setOptions: (newOptions) => set((state) => ({
     options: { ...state.options, ...newOptions},
   })),
   getVolume: () => get().options.volume,
+  getMute: () => get().options.mute,
 
   level: "test",
   setLevel: (level) => set({ level }),
@@ -35,6 +37,7 @@ export const useGameStore = create((set, get) => ({
     const newScore = state.score + amount
     set({ score: newScore })
   },
+  getScore: () => get().score,
 
   player: null,
   setPlayer: (player) => set({ player }),

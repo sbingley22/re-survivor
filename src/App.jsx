@@ -3,6 +3,7 @@ import Game from "./components/Game"
 import { useGameStore } from "./components/useGameStore"
 import Gamepad from "react-gamepad"
 import MainMenu from "./menus/MainMenu"
+import ScoreScreen from "./menus/ScoreScreen"
 
 function App() {
   const { mode, getGamepad } = useGameStore()
@@ -86,6 +87,9 @@ function App() {
             />}
 
             {mode===5 && <MainMenu
+            />}
+
+            {mode===6 && <ScoreScreen
             />}
           </>
         </Gamepad>
