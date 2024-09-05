@@ -27,6 +27,7 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
       actions[anim.current].play()
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   },[nodes, actions])
 
   // Set visible nodes
@@ -70,7 +71,7 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
   useEffect(()=>{
     if (!mixer) return
 
-    const oneShotAnims = ["Fight Jab", "Fight Roundhouse", "Fight Straight", "Jump", "Land", "Pistol Fire", "Pistol Fire2", "Take Damage", "Dying", "Stunned", "Spawning"]
+    const oneShotAnims = ["Fight Jab", "Fight Roundhouse", "Fight Straight", "Jump", "Land", "Pistol Fire", "Pistol Fire2", "Pistol Fire Jogging", "Take Damage", "Dying", "Stunned", "Spawning", "Upper Pistol Fire"]
     oneShotAnims.forEach(osa => {
       actions[osa].clampWhenFinished = true
       actions[osa].repetitions = 1
@@ -89,6 +90,16 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
       if (action === "Pistol Fire2") {
         if (anim.current === "Fight Roundhouse") return
         anim.current = "Pistol Aim2"
+        return
+      }
+      if (action === "Pistol Fire Jogging") {
+        if (transition.current) anim.current = transition.current
+        anim.current = "Jogging"
+        return
+      }
+      if (action === "Upper Pistol Fire") {
+        // actions["Jogging"].fadeOut(0.1)
+        anim.current = transition.current
         return
       }
       if (action === "Fight Roundhouse") {
@@ -131,6 +142,13 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
   // Update Animations
   const updateAnimations = () => {
     if (anim.current === lastAnim.current) return
+    if (!actions[anim.current]) console.log("Couldnt find animation", anim.current, lastAnim.current)
+
+    // Check for special multipart animations
+    if (anim.current.includes("Upper ")) {
+      bodyAnimation()
+      return
+    }
 
     const fadeTime = 0.1
     actions[lastAnim.current].fadeOut(fadeTime)
@@ -139,6 +157,28 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
 
     const timescale = getTimeScale()
     action.setEffectiveTimeScale(timescale)
+
+    lastAnim.current = anim.current
+  }
+
+  // Special multi body part animations
+  const bodyAnimation = () => {
+    let upper = null
+    let lower = null
+    if (anim.current === "Upper Pistol Fire") {
+      upper = "Upper Pistol Fire"
+      lower = "Lower Jogging"
+    }
+
+    if (!upper || !lower) {
+      console.log("Couldn't apply body animation")
+      return
+    }
+
+    // Apply upper and lower animations
+    actions[lastAnim.current].fadeOut(0.1)
+    actions[upper].reset().fadeIn(0.1).play()
+    actions[lower].reset().fadeIn(0.1).play()
 
     lastAnim.current = anim.current
   }

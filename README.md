@@ -6,6 +6,7 @@ Description:
 Survive a zombie and mutant infection.
 
 TODO:
+Add touch and mouse ctrls
 add shotgun, machine gun, items
 add character select with unique attributes (jill extra speed, leon more health, etc)
 add level up system where upon level up (score thresholds) random abilities unlocked

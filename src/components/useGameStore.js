@@ -16,8 +16,8 @@ export const useGameStore = create((set, get) => ({
   mode: 5,
   setMode: (mode) => set({ mode}),
   options:{
-    // character: "jill",
-    character: "leon",
+    character: "jill",
+    // character: "leon",
     // character: "goth",
     volume: 0.5,
     mute: false,
@@ -74,6 +74,13 @@ export const useGameStore = create((set, get) => ({
       position: position,
     })
     set({ enemies: tempE })
+  },
+
+  abilities: {
+    "Run and Gun": {
+      unlocked: true,
+      enabled: true,
+    },
   },
 
   inventory: [

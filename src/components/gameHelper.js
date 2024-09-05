@@ -72,6 +72,8 @@ export const isUnskippableAnimation = (anim) => {
   if (a === "Land") return true
   if (a === "Pistol Fire") return true
   if (a === "Pistol Fire2") return true
+  if (a === "Pistol Fire Upper") return true
+  if (a === "Upper Pistol Fire") return true
   if (a === "Take Damage") return true
   if (a === "Spawning") return true
   if (a === "Dying") return true
@@ -108,6 +110,57 @@ export const lockOnEnemy = (position, dx, dy, enemies, targetedEnemy) => {
     if (distance < closestDistance) {
       closestEnemy = { x: vx, y: vz };
       closestDistance = distance;
+      targetedEnemy.current = enemy.id
+    }
+  })
+
+  if (!closestEnemy) {
+    return null
+  }
+
+  return closestEnemy
+}
+
+export const lockOnEnemyAngle = (position, dx, dy, enemies, targetedEnemy) => {
+  if (enemies.length < 1) return null
+  const range = 6
+
+  let closestEnemy = null
+  let closestDistance = Infinity
+  let closestAngle = Infinity
+  targetedEnemy.current = null
+
+  enemies.forEach(enemy => {
+    if (!enemy) return
+
+    if (enemy.health <= 0) return
+    
+    const ex = enemy.position.x
+    const ez = enemy.position.z
+
+    const vx = ex - position.x
+    const vz = ez - position.z
+
+    const distance = Math.sqrt(vx * vx + vz * vz)
+
+    const len = Math.sqrt(dx * dx + dy * dy)
+    const ndx = dx / len
+    const ndy = dy / len
+
+    const lenEnemy = Math.sqrt(vx * vx + vz * vz)
+    const evx = vx / lenEnemy
+    const evz = vz / lenEnemy
+
+    const dotProduct = ndx * evx + ndy * evz
+    const angle = Math.acos(dotProduct)
+
+    if (distance > range) return
+    
+    if (distance < closestDistance) {
+      if (angle < Math.PI / 2 && angle < closestAngle)
+      closestEnemy = { x: vx, y: vz }
+      closestDistance = distance
+      closestAngle
       targetedEnemy.current = enemy.id
     }
   })
