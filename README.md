@@ -1,6 +1,6 @@
 # Re Survivor
 
-Live Link: https://sbingley22.github.io/re-clone/
+Live Link: https://sbingley22.github.io/re-survivor/
 
 Description:
 Survive a zombie and mutant infection.
