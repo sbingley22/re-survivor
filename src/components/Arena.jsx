@@ -191,6 +191,7 @@ const Arena = () => {
       if (result === false) {
         wave.current.index += 1
         addScore(100)
+        if (player.current) player.current.scoreFlag = 100
       }
     }
 

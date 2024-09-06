@@ -25,6 +25,16 @@ const MainMenu = () => {
     setOptions({ mute: newMuteStatus })
   }
 
+  const handleMouseChange = (e) => {
+    const newStatus = e.target.checked
+    setOptions({ useMouse: newStatus })
+  }
+
+  const handleControllerChange = (e) => {
+    const newStatus = e.target.checked
+    setOptions({ useController: newStatus })
+  }
+
   return (
     <div className="w-full h-full bg-black bg-cover bg-center bg-[url('./stills/mainMenu.png')] text-white overflow-hidden">
       {/* Header */}
@@ -113,8 +123,27 @@ const MainMenu = () => {
               onChange={handleMuteChange}
             />
           </div>
-          
-          {/* Add more options here as needed */}
+
+          {/* Controller */}
+          <div className="mb-4">
+            <label className="block mb-2">Use Controller</label>
+            <input
+              type="checkbox"
+              checked={options.useController}
+              onChange={handleControllerChange}
+            />
+          </div>
+
+          {/* Mouse */}
+          <div className="mb-4">
+            <label className="block mb-2">Use Mouse</label>
+            <input
+              type="checkbox"
+              checked={options.useMouse}
+              onChange={handleMouseChange}
+            />
+          </div>
+
         </div>
       </div>
     </div>

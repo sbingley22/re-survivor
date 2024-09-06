@@ -1,8 +1,34 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useGameStore } from "./components/useGameStore"
 
 const Hud = () => {
-  const { options, score, hudInfo, inventory, inventorySlot } = useGameStore()
+  const { options, setPlayerFlag, score, hudInfo, inventory, inventorySlot } = useGameStore()
+  const [clickMark, setClickMark] = useState({x: -99, y: -99})
+
+  // Mouse Events
+  useEffect(() => {
+    const handleMouseDown = (e) => {
+      if (!options.useMouse) return
+      setClickMark({x: e.clientX - 3, y: e.clientY - 3})
+    }
+
+    const handleMouseUp = () => {
+      setClickMark({x:-99,y:-99})
+    }
+
+    window.addEventListener('mousedown', handleMouseDown)
+    window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('touchstart', handleMouseDown)
+    window.addEventListener('touchend', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown)
+      window.removeEventListener('mouseup', handleMouseUp)
+      window.removeEventListener('touchstart', handleMouseDown)
+      window.removeEventListener('touchend', handleMouseUp)
+    }
+  }, [options.useMouse])
+
   const getHudImg = () => {
     let hudImg = "./status/jillHealthy.png"
     let status = "Healthy"
@@ -46,8 +72,20 @@ const Hud = () => {
 
   }, [inventory, inventorySlot])
 
+  const inventoryItemClicked = (index) => {
+    // console.log("Clicked inventory item")
+    setPlayerFlag("inventoryFlag", index)
+  }
+
   return (
     <>
+      {clickMark.x > 0 && (
+        <div 
+          className="absolute w-4 h-4 rounded-md bg-slate-600 border-2 border-slate-100" 
+          style={{ top: `${clickMark.y}px`, left: `${clickMark.x}px` }} 
+        />
+      )}
+
       <img 
         className="absolute bottom-0 right-0 border-black border-4"
         style={{width: 160, backgroundColor: bgCol, borderColor: bgCol}}
@@ -60,10 +98,11 @@ const Hud = () => {
 
       <div className="absolute top-0 left-0 m-0 text-yellow-50 flex w-full box-border justify-center items-center text-center">
         {inventory.map((inv, index) => (
-          <p
+          <button
             key={"inventory"+index}
             className={`${index===inventorySlot? "border-slate-200" : "border-slate-800"} p-1 m-1 bg-slate-950 border-2 inline-block flex-grow`}
-          >{`${inv.name !== "" ? inv.name + " x" + inv.amount : ""}`}</p>
+            onClick={()=>inventoryItemClicked(index)}
+          >{`${inv.name !== "" ? inv.name + " x" + inv.amount : ""}`}</button>
         ))}
       </div>
     </>

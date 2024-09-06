@@ -11,7 +11,7 @@ import { lockOnEnemy, lockOnEnemyAngle, cameraFollow, getGroundYfromXZ, isUnskip
 const vec3 = new THREE.Vector3()
 
 const Player = ({ splatterFlag }) => {
-  const { setMode, options, getVolume, getMute, getGamepad, level, setScore, getScore, player, setPlayer, ground, enemyGroup, abilities, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
+  const { setMode, options, getVolume, getMute, getGamepad, level, setScore, getScore, player, setPlayer, ground, enemyGroup, abilities, setAbilities, inventory, inventorySlot, setInventorySlot, inventoryRemoveItem, setHudInfoParameter } = useGameStore()
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
   const [skin, setSkin] = useState(null)
@@ -20,13 +20,81 @@ const Player = ({ splatterFlag }) => {
   const [, getKeys] = useKeyboardControls()
   const { camera } = useThree()
 
+  const isMouseDown = useRef(false)
+  const mouseStartPos = useRef({ x: 0, y: 0 })
+  const mouseCurrentPos = useRef({ x: 0, y: 0 })
+
   const baseSpeed = 4.0
   const speedMultiplier = useRef(1.0)
   const inventoryHeld = useRef(false)
   const inventoryUseHeld = useRef(false)
   const targetedEnemy = useRef(null)
   const aimTimer = useRef(0)
+  const prevScore = useRef(0)
 
+  // Mouse Events
+  useEffect(() => {
+    const handleMouseDown = (e) => {
+      if (!options.useMouse) return
+      isMouseDown.current = true
+      mouseStartPos.current = { x: e.clientX, y: e.clientY }
+      mouseCurrentPos.current = { x: e.clientX, y: e.clientY }
+    }
+
+    const handleMouseMove = (e) => {
+      if (!options.useMouse) return
+      if (isMouseDown.current) {
+        mouseCurrentPos.current = { x: e.clientX, y: e.clientY }
+      }
+    }
+
+    const handleMouseUp = () => {
+      isMouseDown.current = false
+    }
+
+    window.addEventListener('mousedown', handleMouseDown)
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown)
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [options.useMouse])
+  // Touch Events
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      if (!options.useMouse) return
+      isMouseDown.current = true
+      const touch = e.touches[0]
+      mouseStartPos.current = { x: touch.clientX, y: touch.clientY }
+      mouseCurrentPos.current = { x: touch.clientX, y: touch.clientY }
+    }
+  
+    const handleTouchMove = (e) => {
+      if (!options.useMouse) return
+      if (isMouseDown.current) {
+        const touch = e.touches[0]
+        mouseCurrentPos.current = { x: touch.clientX, y: touch.clientY }
+      }
+    }
+  
+    const handleTouchEnd = () => {
+      isMouseDown.current = false
+    }
+  
+    window.addEventListener('touchstart', handleTouchStart)
+    window.addEventListener('touchmove', handleTouchMove)
+    window.addEventListener('touchend', handleTouchEnd)
+  
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [options.useMouse])
+  
   // Character
   useEffect(()=>{
     // console.log(options.character)
@@ -86,8 +154,19 @@ const Player = ({ splatterFlag }) => {
     
     // Reset the score
     setScore(0);
-}
+  }
 
+  const xpIncrease = () => {
+    const xp = getScore()
+    const prev = prevScore.current
+
+    if (xp >= 100 && prev < 100) {
+      setAbilities({"Run and Gun": {unlocked:true, enabled:true}})
+      setHudInfoParameter({msg: "Unlocked Run n Gun!"})
+    }
+
+    prevScore.current = xp
+  }
 
   const playerDead = () => {
     // console.log("DEAD")
@@ -131,6 +210,29 @@ const Player = ({ splatterFlag }) => {
     setHudInfoParameter({health: group.current.health})
   }
 
+  // Use inventory Item
+  const inventoryItemUse = (slot) => {
+    const item = inventory[slot]
+
+    if (item && item.name!=="") {
+      if (item.name === "Stun Grenade") {
+        if (enemyGroup.current) {
+          enemyGroup.current.children.forEach(child => {
+            child.actionFlag = "Stunned"
+          })
+        }
+        inventoryRemoveItem(inventorySlot, 1)
+        playAudio("./audio/gun-cocking.wav", 0.9 * getVolume(), getMute())
+      }
+      else if (item.name === "Medkit") {
+        group.current.health += 50
+        if (group.current.health > 100) group.current.health = 100
+        setHudInfoParameter({health: group.current.health})
+        inventoryRemoveItem(inventorySlot, 1)
+      }
+    }
+  }
+
   // Game loop
   useFrame((state, delta) => {
     if (!group.current) return
@@ -156,6 +258,14 @@ const Player = ({ splatterFlag }) => {
       }
       group.current.groundFlag = null
     }
+    if (group.current.scoreFlag) {
+      xpIncrease()
+      group.current.scoreFlag = null
+    }
+    if (group.current.inventoryFlag || group.current.inventoryFlag === 0) {
+      inventoryItemUse(group.current.inventoryFlag)
+      group.current.inventoryFlag = null
+    }
 
     // Inventory
     const updateInventory = () => {
@@ -175,25 +285,7 @@ const Player = ({ splatterFlag }) => {
 
       if ((inventoryUse || gamepad.inventoryUse) && !inventoryUseHeld.current) {
         inventoryUseHeld.current = true
-        const item = inventory[inventorySlot]
-
-        if (item && item.name!=="") {
-          if (item.name === "Stun Grenade") {
-            if (enemyGroup.current) {
-              enemyGroup.current.children.forEach(child => {
-                child.actionFlag = "Stunned"
-              })
-            }
-            inventoryRemoveItem(inventorySlot, 1)
-            playAudio("./audio/gun-cocking.wav", 0.9 * getVolume(), getMute())
-          }
-          else if (item.name === "Medkit") {
-            group.current.health += 50
-            if (group.current.health > 100) group.current.health = 100
-            setHudInfoParameter({health: group.current.health})
-            inventoryRemoveItem(inventorySlot, 1)
-          }
-        }
+        inventoryItemUse(inventorySlot)
       } else inventoryUseHeld.current = false
     }
     updateInventory()
@@ -256,12 +348,30 @@ const Player = ({ splatterFlag }) => {
         dx *= 0.7
         dy *= 0.7
       }
+
+      // Handle mouse/touch input
+      if (isMouseDown.current && options.useMouse) {
+        const dxMouse = mouseCurrentPos.current.x - mouseStartPos.current.x
+        const dyMouse = mouseCurrentPos.current.y - mouseStartPos.current.y
+    
+        const distance = Math.sqrt(dxMouse**2 + dyMouse**2)
+        let tempSpeed = distance> 50 ? 1 : distance / 50
+        if (distance > 10) {
+          dx = dxMouse / distance // Normalize
+          dy = dyMouse / distance // Normalize
+          dx *= tempSpeed
+          dy *= tempSpeed
+        }
+      }
+
       // gamepad
       const gpmx = gamepad.moveX
       const gpmy = gamepad.moveY
       const moveDeadZone = 0.3
-      if (Math.abs(gpmx) > moveDeadZone) dx = gpmx
-      if (Math.abs(gpmy) > moveDeadZone) dy = gpmy * -1
+      if (options.useController) {
+        if (Math.abs(gpmx) > moveDeadZone) dx = gpmx
+        if (Math.abs(gpmy) > moveDeadZone) dy = gpmy * -1
+      }
 
       // get move action
       let speed = baseSpeed * speedMultiplier.current * delta
@@ -294,10 +404,12 @@ const Player = ({ splatterFlag }) => {
           setHudInfoParameter({status: "Shooting"})
         }
         else {
-          rotateToVec(group.current, dx, dy)
-          transition.current = "Jogging"
-          if (!isUnskippableAnimation(anim)) {
-            anim.current = "Jogging"
+          if (moveAction !== "Shooting") {
+            rotateToVec(group.current, dx, dy)
+            transition.current = "Jogging"
+            if (!isUnskippableAnimation(anim)) {
+              anim.current = "Jogging"
+            }
           }
           setHudInfoParameter({status: "Pistol Ready"})
         }
@@ -347,6 +459,10 @@ const Player = ({ splatterFlag }) => {
       ref={group}
       name='Player'
       health={100}
+      inventoryFlag={null}
+      actionFlag={null}
+      dmgFlag={null}
+      scoreFlag={null}
     >
       <CharModel 
         anim={anim}

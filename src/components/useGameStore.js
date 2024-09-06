@@ -21,6 +21,8 @@ export const useGameStore = create((set, get) => ({
     // character: "goth",
     volume: 0.5,
     mute: false,
+    useController: true,
+    useMouse: true,
   },
   setOptions: (newOptions) => set((state) => ({
     options: { ...state.options, ...newOptions},
@@ -41,6 +43,10 @@ export const useGameStore = create((set, get) => ({
 
   player: null,
   setPlayer: (player) => set({ player }),
+  setPlayerFlag: (flag, value) => {
+    const state = get()
+    if (state.player.current) state.player.current[flag] = value
+  },
   ground: null,
   setGround: (ground) => set({ ground }),
 
@@ -78,10 +84,13 @@ export const useGameStore = create((set, get) => ({
 
   abilities: {
     "Run and Gun": {
-      unlocked: true,
-      enabled: true,
+      unlocked: false,
+      enabled: false,
     },
   },
+  setAbilities: (newAbilities) => set((state) => ({
+    abilities: { ...state.abilities, ...newAbilities},
+  })),
 
   inventory: [
     {name: "Stun Grenade", amount: 1},

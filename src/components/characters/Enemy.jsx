@@ -43,6 +43,7 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const enemyDead = () => {
     enemiesRemove(id)
     addScore(10)
+    if (player.current) player.current.scoreFlag = 10
   }
 
   // Take Damage

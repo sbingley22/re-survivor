@@ -6,10 +6,11 @@ import MainMenu from "./menus/MainMenu"
 import ScoreScreen from "./menus/ScoreScreen"
 
 function App() {
-  const { mode, getGamepad } = useGameStore()
+  const { mode, options, getGamepad } = useGameStore()
 
   // Gamepad setup
   const handleGamepadButtonDown = (buttonName) => {
+    if (!options.useController) return
     if (!buttonName) return
     const gamepad = getGamepad()
     if (!gamepad) return
@@ -22,6 +23,7 @@ function App() {
     else if (buttonName === "DPadUp") gamepad.inventoryUse = true
   }
   const handleGamepadButtonUp = (buttonName) => {
+    if (!options.useController) return
     if (!buttonName) return
     const gamepad = getGamepad()
     if (!gamepad) return
@@ -34,6 +36,7 @@ function App() {
     else if (buttonName === "DPadUp") gamepad.inventoryUse = false
   }
   const handleGamepadAxisChange = (axisName, value) => {
+    if (!options.useController) return
     const gamepad = getGamepad()
     if (!gamepad) return
     // console.log(`${axisName} : ${value}`)
