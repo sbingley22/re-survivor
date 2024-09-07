@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 /* eslint-disable react/prop-types */
 import { useEffect, useRef } from 'react'
-import glb from "../assets/items/reProps.glb?url"
+import glb from "../assets/items/bush.glb?url"
 import { useFrame } from '@react-three/fiber'
 import { useGameStore } from '../components/useGameStore'
 import { useGLTF } from '@react-three/drei'

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useGameStore } from "./components/useGameStore"
+import { getXpLevel } from "./components/gameHelper"
 
 const Hud = () => {
   const { options, setPlayerFlag, score, hudInfo, inventory, inventorySlot } = useGameStore()
@@ -43,7 +44,7 @@ const Hud = () => {
     else if (character === "leon") char = "leon"
     else if (character === "leon shirtless") char = "leonAlt"
     else if (character === "goth") char = "goth"
-    else if (character === "survivor f") char = "jillAlt"
+    else if (character === "survivor f") char = "survivorF"
 
     hudImg = `./status/${char}${status}.png`
     return hudImg
@@ -52,6 +53,8 @@ const Hud = () => {
 
   let healthMultiplier = (hudInfo.health * 2.5)
   let bgCol = `rgba(${255-healthMultiplier}, ${healthMultiplier}, 0, 0.2)`
+
+  const xpLevel = getXpLevel(score)
 
   useEffect(()=>{
     const item = inventory[inventorySlot]
@@ -92,9 +95,9 @@ const Hud = () => {
         src={hudImg} 
       />
 
-      <p className="absolute bottom-0 left-0 m-2 text-green-500">{hudInfo.msg}</p>
-
-      <p className="absolute bottom-8 left-0 m-2 text-green-500">SCORE: {score}</p>
+      <p className="absolute bottom-16 left-0 m-2 text-green-500 bg-slate-800 p-2">Level: {xpLevel}</p>
+      <p className="absolute bottom-8 left-0 m-2 text-green-500 bg-slate-800 p-2">XP: {score}</p>
+      <p className="absolute bottom-0 left-0 m-2 text-green-500 bg-slate-800 p-2">{hudInfo.msg}</p>
 
       <div className="absolute top-0 left-0 m-0 text-yellow-50 flex w-full box-border justify-center items-center text-center">
         {inventory.map((inv, index) => (

@@ -6,7 +6,7 @@ import { useKeyboardControls } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { useGameStore } from "../useGameStore"
-import { lockOnEnemy, lockOnEnemyAngle, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec, playAudio, cameraControls, isFemale } from "../gameHelper"
+import { lockOnEnemy, lockOnEnemyAngle, cameraFollow, getGroundYfromXZ, isUnskippableAnimation, rotateToVec, playAudio, cameraControls, isFemale, xpLevels } from "../gameHelper"
 
 const vec3 = new THREE.Vector3()
 
@@ -15,8 +15,10 @@ const Player = ({ splatterFlag }) => {
   const group = useRef()
   const [visibleNodes, setVisibleNodes] = useState(["Ana", "Pistol", "Shoes-HighTops", "Jacket", "Hair-Parted"])
   const [skin, setSkin] = useState(null)
+  const [weapon, setWeapon] = useState("Pistol")
   const anim = useRef("Pistol Ready")
   const transition = useRef("Pistol Ready")
+  const forceAnimation = useRef(null)
   const [, getKeys] = useKeyboardControls()
   const { camera } = useThree()
 
@@ -26,10 +28,16 @@ const Player = ({ splatterFlag }) => {
 
   const baseSpeed = 4.0
   const speedMultiplier = useRef(1.0)
+  const aimTimer = useRef(0)
+  const baseShotRate = 0.5
+  const shotRateMultiplier = useRef(1.0)
+  const baseDamage = 20
+  const damageMultiplier = useRef(1.0)
+  const damageResistanceMultiplier = useRef(1.0)
+
   const inventoryHeld = useRef(false)
   const inventoryUseHeld = useRef(false)
   const targetedEnemy = useRef(null)
-  const aimTimer = useRef(0)
   const prevScore = useRef(0)
 
   // Mouse Events
@@ -99,11 +107,11 @@ const Player = ({ splatterFlag }) => {
   useEffect(()=>{
     // console.log(options.character)
     if (options.character === "jill") {
-      speedMultiplier.current = 1.1
+      speedMultiplier.current = 1.2
     }
     else if (options.character === "jill jacketless") {
       setVisibleNodes(["Ana", "Pistol", "Shoes-HighTops", "Hair-Parted"])
-      speedMultiplier.current = 1.1
+      speedMultiplier.current = 1.2
     }
     else if (options.character === "jill jacketless alt") {
       setVisibleNodes(["AnaGen", "Pistol", "Shoes-HighTops", "Hair-Parted"])
@@ -111,20 +119,32 @@ const Player = ({ splatterFlag }) => {
     else if (options.character === "leon") {
       setVisibleNodes(["Leon", "Pistol"])
       setSkin({node: "Leon", index: 0})
+      speedMultiplier.current = 0.9
+      damageMultiplier.current = 1.5
+      damageResistanceMultiplier.current = 0.9
+      shotRateMultiplier.current = 0.7
     }
     else if (options.character === "leon shirtless") {
       setVisibleNodes(["Leon", "Pistol"])
       setSkin({node: "Leon", index: 1})
+      speedMultiplier.current = 1.0
+      damageMultiplier.current = 1.5
+      shotRateMultiplier.current = 0.7
+      damageResistanceMultiplier.current = 0.9
     }
     else if (options.character === "goth") {
       setVisibleNodes(["SurvivorFGen", "Pistol", "Shoes-HighTops", "Hair-Parted", "Hair-TiedBack", "Hair-WavyPunk"])
       speedMultiplier.current = 1.4
+      damageMultiplier.current = 1.9
+      shotRateMultiplier.current = 0.5
+      damageResistanceMultiplier.current = 0.1
     }
     else if (options.character === "survivor f") {
       setVisibleNodes(["SurvivorF", "Pistol", "Shoes-HighTops",  "Hair-WavyPunk", "GownTop"])
-    }
-    else {
-      setVisibleNodes(["Ana", "Pistol", "Shoes-HighTops", "JacketShort", "Hair-Parted"])
+      speedMultiplier.current = 0.9
+      damageMultiplier.current = 2.5
+      shotRateMultiplier.current = 0.9
+      damageResistanceMultiplier.current = 2.5
     }
   }, [options])
   
@@ -160,9 +180,25 @@ const Player = ({ splatterFlag }) => {
     const xp = getScore()
     const prev = prevScore.current
 
-    if (xp >= 100 && prev < 100) {
+    if (xp >= xpLevels[1] && prev < xpLevels[1]) {
       setAbilities({"Run and Gun": {unlocked:true, enabled:true}})
       setHudInfoParameter({msg: "Unlocked Run n Gun!"})
+    }
+    if (xp >= xpLevels[2] && prev < xpLevels[2]) {
+      speedMultiplier.current *= 1.1
+      setHudInfoParameter({msg: "Speed Increased!"})
+    }
+    if (xp >= xpLevels[3] && prev < xpLevels[3]) {
+      shotRateMultiplier.current = 1.2
+      setHudInfoParameter({msg: "Fire Rate Increased!"})
+    }
+    if (xp >= xpLevels[4] && prev < xpLevels[4]) {
+      damageMultiplier.current = 1.2
+      setHudInfoParameter({msg: "Damage Increased!"})
+    }
+    if (xp >= xpLevels[5] && prev < xpLevels[5]) {
+      setWeapon("Uzi")
+      setHudInfoParameter({msg: "Unlocked Uzi!"})
     }
 
     prevScore.current = xp
@@ -185,7 +221,7 @@ const Player = ({ splatterFlag }) => {
         if (distance > flag.range) return
       }
     }
-    group.current.health -= flag.dmg
+    group.current.health -= flag.dmg * damageResistanceMultiplier.current
 
     splatterFlag.current = {
       pos: group.current.position,
@@ -292,9 +328,20 @@ const Player = ({ splatterFlag }) => {
 
     const shoot = (runNGun = false) => {
       aimTimer.current += delta
+      let alreadyShooting = false
+      if (["Pistol Fire", "Pistol Fire2"].includes(anim.current)) { 
+        alreadyShooting = true
+      }
       if (isUnskippableAnimation(anim)) return
 
-      if (aimTimer.current < 0.5) {
+      let gunRate = 1.0
+      let gunDamage = 1.0
+      if (weapon === "Uzi") {
+        gunRate = 3.0
+        gunDamage = 0.5
+      }
+
+      if (aimTimer.current < baseShotRate / shotRateMultiplier.current / gunRate) {
         // cooldown
         // eslint-disable-next-line no-empty
         if (runNGun) {}
@@ -309,9 +356,11 @@ const Player = ({ splatterFlag }) => {
       else if (isFemale(options.character)) anim.current = "Pistol Fire2"
       else anim.current = "Pistol Fire"
 
+      if (alreadyShooting) forceAnimation.current = anim.current
+
       if (targetedEnemy.current) {
-        let dmg = 20
-        if (inventory[inventorySlot].name === "power ammo") {
+        let dmg = baseDamage * damageMultiplier.current * gunDamage
+        if (inventory[inventorySlot].name === "Power Ammo") {
           dmg *= 4
           inventoryRemoveItem(inventorySlot, 1)
           playAudio("./audio/pistol-gunshot.wav", 0.2 * getVolume(), getMute())
@@ -379,10 +428,12 @@ const Player = ({ splatterFlag }) => {
       if (["Pistol Fire", "Pistol Fire2", "Pistol Fire Jogging"].includes(anim.current)) moveAction = "Shooting"
       if (groundSurface==="net") moveAction = "WalkingWade"
       if (group.current.position.y < -0.25) moveAction = "WalkingWade"
+      if (group.current.health < 33) moveAction = "WalkingHurt"
 
       // modify speed
       if (moveAction === "Shooting") speed *= 0.75
       if (moveAction === "WalkingWade") speed *= 0.35
+      if (moveAction === "WalkingHurt") speed *= 0.35
       if (moveAction === "Walking") speed *= 0.4
 
       // move
@@ -394,7 +445,7 @@ const Player = ({ splatterFlag }) => {
 
       // Run and Gun on
       // console.log("Moving ", dx || dy)
-      if ((dx || dy) && abilities["Run and Gun"].unlocked && abilities["Run and Gun"].enabled) {
+      if ((dx || dy) && abilities["Run and Gun"].unlocked && abilities["Run and Gun"].enabled && moveAction!=="WalkingWade") {
         const lockOn = enemyGroup ? lockOnEnemyAngle(group.current.position, dx, dy, enemyGroup.current.children, targetedEnemy) : null
 
         if (lockOn) {
@@ -452,6 +503,7 @@ const Player = ({ splatterFlag }) => {
 
     cameraControls(zoomIn, zoomOut, delta)
     cameraFollow(camera, group.current)
+    // console.log(anim.current)
   })
 
   return (
@@ -469,7 +521,9 @@ const Player = ({ splatterFlag }) => {
         visibleNodes={visibleNodes}
         skin={skin}
         transition={transition} 
+        forceAnimation={forceAnimation}
         speedMultiplier={speedMultiplier}
+        weapon={weapon}
       />
     </group>
   )

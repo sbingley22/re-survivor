@@ -6,7 +6,7 @@ import { useSkinnedMeshClone } from "./SkinnedMeshClone"
 import { useAnimations } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 
-const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier={current:1}, }) => {
+const CharModel = ({ anim, visibleNodes, skin=null, transition, forceAnimation={current:null}, speedMultiplier={current:1}, weapon=null }) => {
   const { scene, nodes, animations } = useSkinnedMeshClone(glb)
   const { mixer, actions } = useAnimations(animations, scene)
   const lastAnim = useRef(anim.current)
@@ -51,6 +51,23 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
       }
     })
   }, [visibleNodes, nodes])
+
+  // Update weapon
+  useEffect(()=>{
+    if (!weapon) return
+    // debugger
+    const weapons = ["Pistol", "Uzi", "Sword"]
+    weapons.forEach((w)=>{
+      if (!nodes[w]) return
+      nodes[w].visible = false
+      if (w === weapon) {
+        nodes[w].visible = true
+        if (nodes[w].type === "Group") nodes[w].children.forEach(child => {
+          child.visible = true
+        })
+      }
+    })
+  }, [nodes, weapon])
 
   // Skin change
   useEffect(()=>{
@@ -141,6 +158,10 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
 
   // Update Animations
   const updateAnimations = () => {
+    if (forceAnimation.current && anim.current === forceAnimation.current) {
+      actions[anim.current].reset()
+      return
+    }
     if (anim.current === lastAnim.current) return
     if (!actions[anim.current]) console.log("Couldnt find animation", anim.current, lastAnim.current)
 
@@ -187,6 +208,7 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, speedMultiplier=
   // eslint-disable-next-line no-unused-vars
   useFrame((state, delta) => {
     updateAnimations()
+    forceAnimation.current = null
   })
   
   return (

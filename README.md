@@ -7,13 +7,10 @@ Survive a zombie and mutant infection.
 
 TODO:
 add shotgun, machine gun, items
-add character select with unique attributes (jill extra speed, leon more health, etc)
 add level up system where upon level up (score thresholds) random abilities unlocked
 add active abilities (rechargable)
-add passive abilities (damage increase, speed increase, armour)
-add score system
+add passive abilities (armour, pistol->uzi)
 enemies can randomly drop score (run over to collect)
-score increase with time and kills
 
 
 To get Xbox Controller Working I had to change in package.json

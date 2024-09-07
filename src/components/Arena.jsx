@@ -112,12 +112,35 @@ const Arena = () => {
         })
       })
     }
+    if (nodes["grenades"]) {
+      nodes["grenades"].children.forEach(child => {
+        tempItems.push({
+          id: uuidv4(),
+          name: "Grenade",
+          node: "Grenade",
+          amount: 1,
+          position: [child.position.x, child.position.y, child.position.z],
+          scale: [child.scale.x, child.scale.y, child.scale.z],
+        })
+      })
+    }
+    if (nodes["ammos"]) {
+      nodes["ammos"].children.forEach(child => {
+        tempItems.push({
+          id: uuidv4(),
+          name: "Power Ammo",
+          node: "Ammo",
+          amount: 20,
+          position: [child.position.x, child.position.y, child.position.z],
+          scale: [child.scale.x, child.scale.y, child.scale.z],
+        })
+      })
+    }
     setItems(tempItems)
 
   }, [enemiesAdd, level, nodes, setEnemies, setEnemyGroup, setGround])
 
   const spawnEnemies = (waveData) => {
-    // debugger
     const newEnemies = []
     for (let index = 0; index < waveData.batch; index++) {
       if (wave.current.amount < 1) {
@@ -183,13 +206,17 @@ const Arena = () => {
     if (!waveData) return
 
     wave.current.timer += delta
-    if (wave.current.timer > waveData.rate) {
+    if (wave.current.timer > waveData.rate && enemies.length < 10) {
       wave.current.timer = 0
       const result = spawnEnemies(waveData)
 
       // check if all enemies are spawned
       if (result === false) {
         wave.current.index += 1
+        wave.current.timer = -20
+        const nextWave = levels[level].waves[wave.current.index]
+        if (nextWave) wave.current.amount = nextWave.amount
+
         addScore(100)
         if (player.current) player.current.scoreFlag = 100
       }

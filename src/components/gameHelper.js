@@ -220,3 +220,13 @@ export const isFemale = (char) => {
 
   return female
 }
+
+// export const xpLevels = [0, 100, 300, 600, 1000, 1400]
+export const xpLevels = [0, 10, 20, 30, 40, 50]
+export const getXpLevel = (xp) => {
+  if (xp <= 0) return 0
+  for (let index = 0; index < xpLevels.length; index++) {
+    if (xp < xpLevels[index]) return index-1
+  }
+  return xpLevels.length - 1
+}
