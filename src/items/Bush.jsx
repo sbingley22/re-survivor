@@ -26,7 +26,7 @@ const Bush = ({ id, pos, scale=1, bushes, setBushes }) => {
     if (!group || !group.current) return
 
     const distance = group.current.position.distanceTo(player.current.position)
-    if (distance < scale[0]) {
+    if (distance < scale[0] * 0.9) {
       const item = inventory[inventorySlot]
       if (item.name === "Bush Spray") {
         // Remove net and reduce item count

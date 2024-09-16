@@ -12,6 +12,8 @@ import Enemy from './characters/Enemy'
 import BloodManager from './BloodManager'
 import { useFrame } from '@react-three/fiber'
 import Bush from '../items/Bush'
+import Turret from '../items/Turret'
+import Xp from '../items/Xp'
 
 const Arena = () => {
   const { addScore, player, level, setGround, enemies, setEnemies, enemiesAdd, setEnemyGroup } = useGameStore()
@@ -19,9 +21,11 @@ const Arena = () => {
   const arenaRef = useRef()
   const enemiesGroup = useRef()
   const [jetski, setJetski] = useState(null)
+  const [turrets, setTurrets] = useState([])
   const [nets, setNets] = useState([])
   const [bushes, setBushes] = useState([])
-  const [items, setItems] = useState([])  
+  const [items, setItems] = useState([])
+  const [xpPickups, setXpPickups] = useState([])
   const splatterFlag = useRef(null)
 
   const wave = useRef({
@@ -57,6 +61,19 @@ const Arena = () => {
       setJetski({
         position: nodes["jetski"].position
       })
+    }
+
+    // Turrets
+    if (nodes["turretPlants"]) {
+      const temp = []
+      nodes["turretPlants"].children.forEach(child => {
+        temp.push({
+          id: uuidv4(),
+          position: [child.position.x, child.position.y, child.position.z],
+          scale: [child.scale.x, child.scale.y, child.scale.z],
+        })
+      })
+      setTurrets(temp)
     }
 
     // Nets
@@ -258,6 +275,7 @@ const Arena = () => {
             position={en.position}
             type={en.type}
             splatterFlag={splatterFlag}
+            setXpPickups={setXpPickups}
           />
         ))}
       </group>
@@ -265,6 +283,28 @@ const Arena = () => {
       {jetski && <Jetski
         position={jetski.position}
       />}
+
+      {xpPickups.map((child) => (
+        <Xp
+          key={child.id}
+          id={child.id}
+          pos={child.position}
+          scale={child.scale}
+          xpPickups={xpPickups}
+          setXpPickups={setXpPickups}
+        />
+      ))}
+
+      {turrets.map((child) => (
+        <Turret
+          key={child.id}
+          id={child.id}
+          pos={child.position}
+          scale={child.scale}
+          turrets={turrets}
+          setTurrets={setTurrets}
+        />
+      ))}
 
       {nets.map((net) => (
         <Net

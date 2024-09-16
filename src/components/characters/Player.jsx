@@ -189,16 +189,33 @@ const Player = ({ splatterFlag }) => {
       setHudInfoParameter({msg: "Speed Increased!"})
     }
     if (xp >= xpLevels[3] && prev < xpLevels[3]) {
-      shotRateMultiplier.current = 1.2
+      shotRateMultiplier.current *= 1.2
       setHudInfoParameter({msg: "Fire Rate Increased!"})
     }
     if (xp >= xpLevels[4] && prev < xpLevels[4]) {
-      damageMultiplier.current = 1.2
+      damageMultiplier.current *= 1.2
       setHudInfoParameter({msg: "Damage Increased!"})
     }
     if (xp >= xpLevels[5] && prev < xpLevels[5]) {
       setWeapon("Uzi")
       setHudInfoParameter({msg: "Unlocked Uzi!"})
+    }
+    if (xp >= xpLevels[6] && prev < xpLevels[6]) {
+      speedMultiplier.current *= 1.1
+      setHudInfoParameter({msg: "Speed Increased!"})
+    }
+    if (xp >= xpLevels[7] && prev < xpLevels[7]) {
+      shotRateMultiplier.current *= 1.2
+      setHudInfoParameter({msg: "Fire Rate Increased!"})
+    }
+    if (xp >= xpLevels[8] && prev < xpLevels[8]) {
+      damageMultiplier.current *= 1.2
+      setHudInfoParameter({msg: "Damage Increased!"})
+    }
+    if (xp >= xpLevels[9] && prev < xpLevels[9]) {
+      group.current.armour = 1
+      setHudInfoParameter({msg: "Armour Aquired!"})
+      setHudInfoParameter({armour: 1}) 
     }
 
     prevScore.current = xp
@@ -221,14 +238,21 @@ const Player = ({ splatterFlag }) => {
         if (distance > flag.range) return
       }
     }
-    group.current.health -= flag.dmg * damageResistanceMultiplier.current
 
-    splatterFlag.current = {
+    let armourHit = false
+    if (group.current.armour > 0) {
+      group.current.armour -= 1
+      armourHit = true
+    }
+    else group.current.health -= flag.dmg * damageResistanceMultiplier.current
+
+    if (!armourHit) splatterFlag.current = {
       pos: group.current.position,
       color: 0x556611,
     }
 
-    if (isFemale(options.character)) playAudio("./audio/f-hurt.ogg", 0.2 * getVolume(), getMute())
+    if (armourHit) playAudio("./audio/metalHit.wav")
+    else if (isFemale(options.character)) playAudio("./audio/f-hurt.ogg", 0.2 * getVolume(), getMute())
     else playAudio("./audio/male-grunt-uh.mp3", 0.2 * getVolume(), getMute())
 
     const chance = Math.random()
@@ -244,6 +268,7 @@ const Player = ({ splatterFlag }) => {
     }
 
     setHudInfoParameter({health: group.current.health})
+    setHudInfoParameter({armour: group.current.armour})
   }
 
   // Use inventory Item
@@ -511,6 +536,7 @@ const Player = ({ splatterFlag }) => {
       ref={group}
       name='Player'
       health={100}
+      armour={0}
       inventoryFlag={null}
       actionFlag={null}
       dmgFlag={null}

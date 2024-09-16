@@ -134,6 +134,7 @@ export const useGameStore = create((set, get) => ({
 
   hudInfo: {
     health: 100,
+    armour: 0,
     msg: "",
     status: null,
   },

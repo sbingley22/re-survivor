@@ -6,11 +6,11 @@ Description:
 Survive a zombie and mutant infection.
 
 TODO:
-add shotgun, machine gun, items
-add level up system where upon level up (score thresholds) random abilities unlocked
-add active abilities (rechargable)
-add passive abilities (armour, pistol->uzi)
-enemies can randomly drop score (run over to collect)
+add shotgun item
+add bosses (stronger enemies that auto shoot spheres)
+final boss drops jetski key that ends level
+unlock maps after previous complete
+unlock characters based on high scores / levels complete
 
 
 To get Xbox Controller Working I had to change in package.json

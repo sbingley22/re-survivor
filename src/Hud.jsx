@@ -3,7 +3,7 @@ import { useGameStore } from "./components/useGameStore"
 import { getXpLevel } from "./components/gameHelper"
 
 const Hud = () => {
-  const { options, setPlayerFlag, score, hudInfo, inventory, inventorySlot } = useGameStore()
+  const { options, setPlayerFlag, score, hudInfo, inventory, inventorySlot, setInventorySlot } = useGameStore()
   const [clickMark, setClickMark] = useState({x: -99, y: -99})
 
   // Mouse Events
@@ -53,6 +53,7 @@ const Hud = () => {
 
   let healthMultiplier = (hudInfo.health * 2.5)
   let bgCol = `rgba(${255-healthMultiplier}, ${healthMultiplier}, 0, 0.2)`
+  if (hudInfo.armour) bgCol = `rgba(0,0,1,0.2)`
 
   const xpLevel = getXpLevel(score)
 
@@ -77,6 +78,7 @@ const Hud = () => {
 
   const inventoryItemClicked = (index) => {
     // console.log("Clicked inventory item")
+    setInventorySlot(index)
     setPlayerFlag("inventoryFlag", index)
   }
 

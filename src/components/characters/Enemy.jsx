@@ -1,12 +1,17 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/no-unknown-property */
+import { v4 as uuidv4 } from 'uuid'
 import { useEffect, useRef, useState } from "react"
 import CharModel from "./CharModel"
 import { useGameStore } from "../useGameStore"
 import { getGroundYfromXZ, isUnskippableAnimation, moveToPlayer, playAudio } from "../gameHelper"
 import { useFrame } from "@react-three/fiber"
+import { Sphere } from '@react-three/drei'
+import { Vector3 } from 'three'
 
-const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
+const vec3 = new Vector3()
+
+const Enemy = ({ id, position, type, health=100, splatterFlag, setXpPickups }) => {
   const group = useRef()
   const { addScore, getVolume, getMute, ground, player, enemiesRemove } = useGameStore()
   const anim = useRef("Spawning")
@@ -18,6 +23,14 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
   const attackPower = useRef(1.0)
   const attackCooldown = useRef(0)
   const weakness = useRef(2)
+
+  const [bullets, setBullets] = useState(0)
+  const bulletRef = useRef()
+  const shotTimer = useRef(0)
+  const shotRate = 2
+  const bulletLife = useRef(0)
+  const bulletDirection = useRef({x:1, z:1})
+  const bulletSpeed = 4
 
   // Initialize
   useEffect(()=>{
@@ -36,13 +49,46 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
       attackPower.current = 1.1
       weakness.current = 2.5
     }
+    else if (type === "Neutrophil") {
+      setVisibleNodes(["Neutrophil", "NeutroRos", "NeutroNet"])
+      speedMultiplier.current = 1.2
+      attackPower.current = 3.0
+      weakness.current = 0.8
+    }
+    else if (type === "NKCell") {
+      setVisibleNodes(["NKCell", "NKCape"])
+      speedMultiplier.current = 1.6
+      attackPower.current = 2.0
+      weakness.current = 1.0
+    }
+    else if (type === "Macrophage") {
+      setVisibleNodes(["Macrophage"])
+      speedMultiplier.current = 1.0
+      attackPower.current = 8.0
+      weakness.current = 0.2
+    }
+
+    if (["Neutrophil", "NKCell", "Macrophage"].includes(type)) {
+      setBullets(1)
+    }
 
   }, [type])
 
   // Remove Enemy
   const enemyDead = () => {
+    const pos = [group.current.position.x, group.current.position.y, group.current.position.z]
+    setXpPickups(prev => {
+      const temp = [...prev]
+      temp.push({
+        id: uuidv4(),
+        position: pos,
+        scale: 1,
+      })
+      return temp
+    })
+
     enemiesRemove(id)
-    addScore(10)
+    addScore(2)
     if (player.current) player.current.scoreFlag = 10
   }
 
@@ -153,6 +199,64 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
     }
     meleeAI()
 
+    if (bullets) {
+      const shoot = () => {
+        if (!bulletRef || !bulletRef.current) return
+
+        const distance = group.current.position.distanceTo(player.current.position)
+        if (distance < 8) {
+          shotTimer.current += delta
+          if (shotTimer.current > shotRate) {
+            // console.log("shot fired")
+            shotTimer.current = 0
+            bulletLife.current = shotRate
+
+            let bx = (player.current.position.x - group.current.position.x) / distance
+            let bz = (player.current.position.z - group.current.position.z) / distance
+            const variance = 0.1
+            bx += (Math.random() - 0.5) * variance
+            bz += (Math.random() - 0.5) * variance
+
+            bulletDirection.current.x = bx
+            bulletDirection.current.z = bz
+
+            console.log(bulletRef.current.scale)
+            bulletRef.current.scale.setScalar(0.1)
+          }
+        }
+
+        if (bulletLife.current > 0) {
+          bulletLife.current -= delta
+          bulletRef.current.position.x += bulletDirection.current.x * bulletSpeed * delta
+          bulletRef.current.position.z += bulletDirection.current.z * bulletSpeed * delta
+
+          vec3.set(
+            bulletRef.current.position.x + group.current.position.x, 
+            0,
+            bulletRef.current.position.z + group.current.position.z, 
+          )
+          const distToPlayer = vec3.distanceTo(player.current.position)
+          if (distToPlayer < 0.5) {
+            //Player hit
+            bulletLife.current = 0
+
+            player.current.dmgFlag = {
+              dmg: 20,
+              pos: null,
+              range: null,
+            }
+          }
+
+          if (bulletLife.current <= 0) {
+            bulletRef.current.position.x = 0
+            bulletRef.current.position.z = 0
+            bulletRef.current.scale.setScalar(0.01)
+          }
+        }
+      }
+      shoot()
+    }
+
   })
   
   return (
@@ -171,6 +275,15 @@ const Enemy = ({ id, position, type, health=100, splatterFlag }) => {
         transition={transition} 
         speedMultiplier={speedMultiplier}
       />
+      {bullets > 0 && 
+        <Sphere
+          ref={bulletRef}
+          position={[0,1,0]}
+          scale={0.01}
+        >
+          <meshStandardMaterial color="red" />
+        </Sphere>
+      }
     </group>
   )
 }
