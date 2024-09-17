@@ -3,7 +3,7 @@ import { useGameStore } from "../components/useGameStore"
 const MainMenu = () => {
   const { setMode, options, setOptions, level, setLevel, resetGame } = useGameStore()
 
-  const maps = ["test", "bog lands", "dead isle"]
+  const maps = ["Marshes", "Bog Lands", "Dead Isle"]
   const characters = ["jill", "jill jacketless", "leon", "leon shirtless", "goth", "survivor f"]
 
   const playGame = () => {
@@ -12,7 +12,7 @@ const MainMenu = () => {
   }
 
   const scoreScreen = () => {
-    setMode(6)
+    setMode(7)
   }
 
   const handleVolumeChange = (e) => {

@@ -92,7 +92,10 @@ function App() {
             {mode===5 && <MainMenu
             />}
 
-            {mode===6 && <ScoreScreen
+            {mode===6 && <ScoreScreen win={false}
+            />}
+
+            {mode===7 && <ScoreScreen win={true}
             />}
           </>
         </Gamepad>

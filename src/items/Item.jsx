@@ -15,7 +15,7 @@ const Item = ({ id, name, node, amount, pos, scale=1, items, setItems }) => {
     if (!player.current) return
 
     const distance = group.current.position.distanceTo(player.current.position)
-    if (distance < 0.5) {
+    if (distance < 1.0) {
       inventoryAddItem(name, amount)
 
       // Remove self

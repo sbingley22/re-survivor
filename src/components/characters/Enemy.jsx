@@ -77,12 +77,18 @@ const Enemy = ({ id, position, type, health=100, splatterFlag, setXpPickups }) =
   // Remove Enemy
   const enemyDead = () => {
     const pos = [group.current.position.x, group.current.position.y, group.current.position.z]
+    let scr = 10
+    if (type==="Neutrophil") scr = 50
+    else if (type==="NKCell") scr = 50
+    else if (type==="Macrophage") scr = 200
+
     setXpPickups(prev => {
       const temp = [...prev]
       temp.push({
         id: uuidv4(),
         position: pos,
         scale: 1,
+        score: scr,
       })
       return temp
     })

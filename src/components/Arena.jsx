@@ -298,6 +298,7 @@ const Arena = () => {
           id={child.id}
           pos={child.position}
           scale={child.scale}
+          scoreAmount={child.score}
           xpPickups={xpPickups}
           setXpPickups={setXpPickups}
         />

@@ -237,7 +237,7 @@ const Player = ({ splatterFlag }) => {
 
   const levelComplete = () => {
     updateScores(1000)
-    setMode(6)
+    setMode(7)
   }
 
   // Take Damage

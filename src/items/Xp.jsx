@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { useGameStore } from '../components/useGameStore'
 
-const Xp = ({ id, pos, scale=1, xpPickups, setXpPickups }) => {
+const Xp = ({ id, pos, scale=1, scoreAmount=10, xpPickups, setXpPickups }) => {
   const group = useRef()
   const { player, addScore } = useGameStore()
 
@@ -16,7 +16,7 @@ const Xp = ({ id, pos, scale=1, xpPickups, setXpPickups }) => {
 
     const distance = group.current.position.distanceTo(player.current.position)
     if (distance < 0.9) {
-      addScore(10)
+      addScore(scoreAmount)
 
       // Remove self
       const temp = xpPickups.filter(item => item.id !== id)
@@ -34,7 +34,7 @@ const Xp = ({ id, pos, scale=1, xpPickups, setXpPickups }) => {
         position-y={0.2}
         scale={0.2}
       >
-        <meshStandardMaterial color="yellow" />
+        <meshStandardMaterial color={scoreAmount<=10 ? "yellow" : "purple"} />
       </Box>
     </group>
   )

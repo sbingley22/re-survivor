@@ -1,7 +1,8 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react"
 import { useGameStore } from "../components/useGameStore"
 
-const ScoreScreen = () => {
+const ScoreScreen = ({ win=false }) => {
   const { setMode, resetGame } = useGameStore()
   const [scores, setScores] = useState(null)
 
@@ -22,9 +23,12 @@ const ScoreScreen = () => {
   const homeScreen = () => {
     setMode(5)
   }
-
+  console.log(win)
   return (
-    <div className="w-full h-full bg-black bg-cover bg-center bg-[url('./stills//gameOver.png')] text-white overflow-hidden">
+    <div 
+      className="w-full h-full bg-black bg-cover bg-center text-white overflow-hidden"
+      style={{ backgroundImage: win===true ? "url('./stills/rideOff.png')" : "url('./stills/gameOver.png')"}}
+    >
       {/* Header */}
       <div className="flex justify-between items-center p-4 bg-gray-800">
         <h1 className="text-3xl">High Scores</h1>

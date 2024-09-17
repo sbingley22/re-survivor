@@ -30,7 +30,7 @@ export const useGameStore = create((set, get) => ({
   getVolume: () => get().options.volume,
   getMute: () => get().options.mute,
 
-  level: "test",
+  level: "Marshes",
   setLevel: (level) => set({ level }),
   score: 0,
   setScore: (score) => set({ score }),
