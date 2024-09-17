@@ -88,7 +88,7 @@ const CharModel = ({ anim, visibleNodes, skin=null, transition, forceAnimation={
   useEffect(()=>{
     if (!mixer) return
 
-    const oneShotAnims = ["Fight Jab", "Fight Roundhouse", "Fight Straight", "Jump", "Land", "Pistol Fire", "Pistol Fire2", "Pistol Fire Jogging", "Take Damage", "Dying", "Stunned", "Spawning", "Upper Pistol Fire"]
+    const oneShotAnims = ["Fight Jab", "Fight Roundhouse", "Fight Straight", "Jump", "Land", "Pistol Fire", "Pistol Fire2", "Pistol Fire Jogging", "Take Damage", "Dying", "Stunned", "Spawning", "Upper Pistol Fire", "ThrowObject"]
     oneShotAnims.forEach(osa => {
       actions[osa].clampWhenFinished = true
       actions[osa].repetitions = 1

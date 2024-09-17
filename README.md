@@ -6,8 +6,6 @@ Description:
 Survive a zombie and mutant infection.
 
 TODO:
-add shotgun item
-add bosses (stronger enemies that auto shoot spheres)
 final boss drops jetski key that ends level
 unlock maps after previous complete
 unlock characters based on high scores / levels complete

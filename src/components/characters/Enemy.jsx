@@ -220,7 +220,6 @@ const Enemy = ({ id, position, type, health=100, splatterFlag, setXpPickups }) =
             bulletDirection.current.x = bx
             bulletDirection.current.z = bz
 
-            console.log(bulletRef.current.scale)
             bulletRef.current.scale.setScalar(0.1)
           }
         }

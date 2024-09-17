@@ -16,7 +16,7 @@ import Turret from '../items/Turret'
 import Xp from '../items/Xp'
 
 const Arena = () => {
-  const { addScore, player, level, setGround, enemies, setEnemies, enemiesAdd, setEnemyGroup } = useGameStore()
+  const { addScore, player, level, setGround, enemies, setEnemies, enemiesAdd, setEnemyGroup, setHudInfoParameter } = useGameStore()
   const { scene, nodes } = useGLTF(levels[level].glb)
   const arenaRef = useRef()
   const enemiesGroup = useRef()
@@ -236,6 +236,14 @@ const Arena = () => {
 
         addScore(100)
         if (player.current) player.current.scoreFlag = 100
+
+        if (wave.current.index >= 3) {
+          player.current.keyFlag = "jetski"
+          setHudInfoParameter({msg: "JetSki Key Obtained. Find the jetski!"})
+          setTimeout(()=>{
+            setHudInfoParameter({msg: "JetSki Key Obtained. Find the jetski!"})
+          }, 10000)
+        }
       }
     }
 

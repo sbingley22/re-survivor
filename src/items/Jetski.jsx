@@ -17,10 +17,12 @@ const Jetski = ({ position }) => {
 
     const distance = group.current.position.distanceTo(player.current.position)
     if (distance < 1) {
+      // console.log(player.current.completeFlag, player.current.keyFlag)
       // Check if player has key
-      if (true) {
+      if (player.current.keyFlag === "jetski") {
         // Level complete
-        console.log("Level Complete")
+        // console.log("Level Complete")
+        player.current.completeFlag = true
       }
     }
   })

@@ -28,7 +28,8 @@ const Item = ({ id, name, node, amount, pos, scale=1, items, setItems }) => {
     <group
       ref={group}
       position={pos}
-      scale={scale}
+      // scale={scale}
+      scale={2.5}
     >
       <ItemModels node={node} />
     </group>

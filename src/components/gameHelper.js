@@ -74,6 +74,7 @@ export const isUnskippableAnimation = (anim) => {
   if (a === "Pistol Fire2") return true
   if (a === "Pistol Fire Upper") return true
   if (a === "Upper Pistol Fire") return true
+  if (a === "ThrowObject") return true
   if (a === "Take Damage") return true
   if (a === "Spawning") return true
   if (a === "Dying") return true
@@ -221,7 +222,7 @@ export const isFemale = (char) => {
   return female
 }
 
-// export const xpLevels = [0, 100, 300, 600, 1000, 1400, 2000, 2500, 3000, 3500, 400]
+// export const xpLevels = [0, 100, 300, 500, 750, 1000, 1400, 1700, 2000, 2400, 2800, 3000, 4000]
 export const xpLevels = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 export const getXpLevel = (xp) => {
   if (xp <= 0) return 0

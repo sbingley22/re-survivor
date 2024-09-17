@@ -143,4 +143,35 @@ export const useGameStore = create((set, get) => ({
     hudInfo: { ...state.hudInfo, ...newParameter },
   })),
 
+  resetGame: () => {
+    set({
+      score: 0,
+      player: null,
+      ground: null,
+      enemies: [],
+      enemyGroup: null,
+      inventory: [
+        { name: "Stun Grenade", amount: 1 },
+        { name: "", amount: 0 },
+        { name: "", amount: 0 },
+        { name: "", amount: 0 },
+        { name: "", amount: 0 },
+        { name: "", amount: 0 },
+      ],
+      inventorySlot: 0,
+      abilities: {
+        "Run and Gun": {
+          unlocked: false,
+          enabled: false,
+        },
+      },
+      hudInfo: {
+        health: 100,
+        armour: 0,
+        msg: "",
+        status: null,
+      },
+    });
+  }
+
 }))

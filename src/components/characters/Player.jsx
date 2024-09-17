@@ -21,6 +21,7 @@ const Player = ({ splatterFlag }) => {
   const forceAnimation = useRef(null)
   const [, getKeys] = useKeyboardControls()
   const { camera } = useThree()
+  const gameTime = useRef(0)
 
   const isMouseDown = useRef(false)
   const mouseStartPos = useRef({ x: 0, y: 0 })
@@ -108,10 +109,16 @@ const Player = ({ splatterFlag }) => {
     // console.log(options.character)
     if (options.character === "jill") {
       speedMultiplier.current = 1.2
+      damageMultiplier.current = 1.2
+      shotRateMultiplier.current = 1.2
+      damageResistanceMultiplier.current = 0.2
     }
     else if (options.character === "jill jacketless") {
       setVisibleNodes(["Ana", "Pistol", "Shoes-HighTops", "Hair-Parted"])
-      speedMultiplier.current = 1.2
+      speedMultiplier.current = 1.3
+      damageMultiplier.current = 1.2
+      shotRateMultiplier.current = 1.2
+      damageResistanceMultiplier.current = 0.4
     }
     else if (options.character === "jill jacketless alt") {
       setVisibleNodes(["AnaGen", "Pistol", "Shoes-HighTops", "Hair-Parted"])
@@ -120,35 +127,37 @@ const Player = ({ splatterFlag }) => {
       setVisibleNodes(["Leon", "Pistol"])
       setSkin({node: "Leon", index: 0})
       speedMultiplier.current = 0.9
-      damageMultiplier.current = 1.5
-      damageResistanceMultiplier.current = 0.9
+      damageMultiplier.current = 1.9
+      damageResistanceMultiplier.current = 0.4
       shotRateMultiplier.current = 0.7
     }
     else if (options.character === "leon shirtless") {
       setVisibleNodes(["Leon", "Pistol"])
       setSkin({node: "Leon", index: 1})
       speedMultiplier.current = 1.0
-      damageMultiplier.current = 1.5
+      damageMultiplier.current = 1.9
       shotRateMultiplier.current = 0.7
-      damageResistanceMultiplier.current = 0.9
+      damageResistanceMultiplier.current = 0.5
     }
     else if (options.character === "goth") {
       setVisibleNodes(["SurvivorFGen", "Pistol", "Shoes-HighTops", "Hair-Parted", "Hair-TiedBack", "Hair-WavyPunk"])
       speedMultiplier.current = 1.4
-      damageMultiplier.current = 1.9
+      damageMultiplier.current = 2.9
       shotRateMultiplier.current = 0.5
-      damageResistanceMultiplier.current = 0.1
+      damageResistanceMultiplier.current = 1.0
     }
     else if (options.character === "survivor f") {
       setVisibleNodes(["SurvivorF", "Pistol", "Shoes-HighTops",  "Hair-WavyPunk", "GownTop"])
       speedMultiplier.current = 0.9
-      damageMultiplier.current = 2.5
+      damageMultiplier.current = 5.5
       shotRateMultiplier.current = 0.9
       damageResistanceMultiplier.current = 2.5
     }
   }, [options])
   
-  const updateScores = () => {
+  const updateScores = (extraScore=0) => {
+    const finalScore = getScore() - Math.floor(gameTime.current) + extraScore
+
     // Retrieve existing scores from localStorage
     const scoresData = JSON.parse(localStorage.getItem("scores")) || {};
     
@@ -159,11 +168,11 @@ const Player = ({ splatterFlag }) => {
     
     // If the character doesn't exist under this level, initialize the score
     if (!scoresData[level][options.character]) {
-        scoresData[level][options.character] = getScore();
+        scoresData[level][options.character] = finalScore
     } else {
         // Compare the current score with the last saved score
         const lastScore = scoresData[level][options.character];
-        const currentScore = getScore();
+        const currentScore = finalScore
         if (lastScore < currentScore) {
             scoresData[level][options.character] = currentScore;
         }
@@ -222,9 +231,13 @@ const Player = ({ splatterFlag }) => {
   }
 
   const playerDead = () => {
-    // console.log("DEAD")
     updateScores()
-    setMode(5)
+    setMode(6)
+  }
+
+  const levelComplete = () => {
+    updateScores(1000)
+    setMode(6)
   }
 
   // Take Damage
@@ -291,6 +304,27 @@ const Player = ({ splatterFlag }) => {
         setHudInfoParameter({health: group.current.health})
         inventoryRemoveItem(inventorySlot, 1)
       }
+      else if (item.name === "Grenade") {
+        // throw nade at target
+        if (targetedEnemy.current) {
+          inventoryRemoveItem(inventorySlot, 1)
+          anim.current = "ThrowObject"
+          playAudio("./audio/explosion.mp3", 0.5 * getVolume(), getMute())
+
+          const enemy = enemyGroup.current.children.find(e => e.id === targetedEnemy.current)
+
+          enemyGroup.current.children.forEach(e => {
+            const distance = e.position.distanceTo(enemy.position)
+            if (distance < 5) {
+              e.dmgFlag = {
+                dmg: 100,
+                position: null,
+                range: null,
+              }
+            }
+          })
+        }
+      }
     }
   }
 
@@ -299,6 +333,8 @@ const Player = ({ splatterFlag }) => {
     if (!group.current) return
     if (!player) setPlayer(group)
     if (group.current.health <= 0) return
+
+    gameTime.current += delta
 
     // eslint-disable-next-line no-unused-vars
     const { forward, backward, left, right, jump, interact, inventoryLeft, inventoryRight, inventoryUse, shift, zoomIn, zoomOut } = getKeys()
@@ -326,6 +362,9 @@ const Player = ({ splatterFlag }) => {
     if (group.current.inventoryFlag || group.current.inventoryFlag === 0) {
       inventoryItemUse(group.current.inventoryFlag)
       group.current.inventoryFlag = null
+    }
+    if (group.current.completeFlag) {
+      levelComplete()
     }
 
     // Inventory
@@ -450,7 +489,7 @@ const Player = ({ splatterFlag }) => {
       // get move action
       let speed = baseSpeed * speedMultiplier.current * delta
       let moveAction = "Jogging"
-      if (["Pistol Fire", "Pistol Fire2", "Pistol Fire Jogging"].includes(anim.current)) moveAction = "Shooting"
+      if (["Pistol Fire", "Pistol Fire2", "Pistol Fire Jogging", "ThrowObject"].includes(anim.current)) moveAction = "Shooting"
       if (groundSurface==="net") moveAction = "WalkingWade"
       if (group.current.position.y < -0.25) moveAction = "WalkingWade"
       if (group.current.health < 33) moveAction = "WalkingHurt"
@@ -460,6 +499,7 @@ const Player = ({ splatterFlag }) => {
       if (moveAction === "WalkingWade") speed *= 0.35
       if (moveAction === "WalkingHurt") speed *= 0.35
       if (moveAction === "Walking") speed *= 0.4
+      if (anim.current === "ThrowObject") speed *= 0.01
 
       // move
       const targetPosition = vec3.set(group.current.position.x + dx * speed, group.current.position.y, group.current.position.z + dy * speed)
@@ -484,7 +524,8 @@ const Player = ({ splatterFlag }) => {
             rotateToVec(group.current, dx, dy)
             transition.current = "Jogging"
             if (!isUnskippableAnimation(anim)) {
-              anim.current = "Jogging"
+              // anim.current = "Jogging"
+              anim.current = moveAction
             }
           }
           setHudInfoParameter({status: "Pistol Ready"})
@@ -541,6 +582,8 @@ const Player = ({ splatterFlag }) => {
       actionFlag={null}
       dmgFlag={null}
       scoreFlag={null}
+      keyFlag={null}
+      completeFlag={false}
     >
       <CharModel 
         anim={anim}

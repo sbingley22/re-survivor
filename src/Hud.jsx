@@ -63,8 +63,9 @@ const Hud = () => {
 
     let msg = "Q/O "
     if (item.name === "Stun Grenade") msg += "to use stun grenade"
+    else if (item.name === "Grenade") msg += "to use grenade"
     else if (item.name === "Medkit") msg += "to use health kit"
-    else if (item.name === "Net Spray") msg = "use net spray by walking on slime and recieve no damage"
+    else if (item.name === "Net Spray") msg = "use net spray by walking on net to destroy it"
     else if (item.name === "Power Ammo") msg = "shoot with power ammo to deal high dmg"
 
     useGameStore.setState((state) => ({

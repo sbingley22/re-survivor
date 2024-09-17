@@ -1,13 +1,13 @@
 import { useGameStore } from "../components/useGameStore"
 
 const MainMenu = () => {
-  const { setMode, getGamepad, options, setOptions, level, setLevel } = useGameStore()
+  const { setMode, options, setOptions, level, setLevel, resetGame } = useGameStore()
 
   const maps = ["test", "bog lands", "dead isle"]
-  // const characters = ["jill", "jill jacketless", "leon", "leon shirtless"]
   const characters = ["jill", "jill jacketless", "leon", "leon shirtless", "goth", "survivor f"]
 
   const playGame = () => {
+    resetGame()
     setMode(0)
   }
 
@@ -60,9 +60,9 @@ const MainMenu = () => {
       <div className="flex h-full">
         {/* Map Selection */}
         <div className="flex-1 p-4">
-          <h2 className="text-xl mb-4">Map Selection</h2>
+          <h2 className="text-2xl mb-4">Map Selection</h2>
           {maps.map((map) => (
-            <div key={map} className="mb-2">
+            <div key={map} className="mb-2 text-xl">
               <label>
                 <input
                   type="radio"
@@ -71,7 +71,7 @@ const MainMenu = () => {
                   onChange={() => setLevel(map)}
                   className="mr-2"
                 />
-                {map}
+                {map.replace(/\b\w/g, (char) => char.toUpperCase())}
               </label>
             </div>
           ))}
@@ -79,9 +79,9 @@ const MainMenu = () => {
 
         {/* Character Selection */}
         <div className="flex-1 p-4">
-          <h2 className="text-xl mb-4">Character Selection</h2>
+          <h2 className="text-2xl mb-4">Character Selection</h2>
           {characters.map((character) => (
-            <div key={character} className="mb-2">
+            <div key={character} className="mb-2 text-xl">
               <label>
                 <input
                   type="radio"
@@ -90,7 +90,7 @@ const MainMenu = () => {
                   onChange={() => setOptions({character: character})}
                   className="mr-2"
                 />
-                {character}
+                {character.replace(/\b\w/g, (char) => char.toUpperCase())}
               </label>
             </div>
           ))}
@@ -98,10 +98,10 @@ const MainMenu = () => {
 
         {/* Options */}
         <div className="flex-1 p-4">
-          <h2 className="text-xl mb-4">Options</h2>
+          <h2 className="text-2xl mb-4">Options</h2>
 
           {/* Volume Control */}
-          <div className="mb-4">
+          <div className="mb-4 text-xl">
             <label className="block mb-2">Volume</label>
             <input
               type="range"

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useGameStore } from "../components/useGameStore"
 
 const ScoreScreen = () => {
-  const { setMode, getGamepad, options, setOptions, level, setLevel } = useGameStore()
+  const { setMode, resetGame } = useGameStore()
   const [scores, setScores] = useState(null)
 
   // Get Scores
@@ -11,10 +11,11 @@ const ScoreScreen = () => {
     if (scoreData) {
       setScores(JSON.parse(scoreData))
     }
-    console.log("Score Data: ", JSON.parse(scoreData))
+    // console.log("Score Data: ", JSON.parse(scoreData))
   }, [])
 
   const playGame = () => {
+    resetGame()
     setMode(0)
   }
 
@@ -52,9 +53,10 @@ const ScoreScreen = () => {
               className="flex-1 p-4"
               style={{backgroundColor: "rgba(0,0,0,0.8)"}}
             >
-              <h2 className="text-3xl">{levelName}</h2>
+              <h2 className="text-3xl mb-6">{levelName.replace(/\b\w/g, (char) => char.toUpperCase())}</h2>
+
               {Object.keys(scores[levelName]).map(charName => (
-                <p key={levelName+charName} className="text-2xl">{charName} : {scores[levelName][charName]}</p>
+                <p key={levelName+charName} className="text-2xl">{charName.replace(/\b\w/g, (char) => char.toUpperCase())} : {scores[levelName][charName]}</p>
               ))}
             </div>
           ))
