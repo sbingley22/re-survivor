@@ -13,11 +13,9 @@ Use w/a/s/d or j/k/l/i to move.
 q/p uses item.
 Each character has diferent attributes such as speed, health, fire rate, damage, etc.
 
-TODO:
+![screenshot](./screenshot)
 
 Dev Info:
 To get Xbox Controller Working I had to change in package.json
 "react-gamepad": "^1.0.3" to "react-gamepad": "SBRK/react-gamepad",
 then run npm i
-
-git subtree push --prefix dist origin gh-pages
